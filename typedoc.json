@@ -1,0 +1,12 @@
+{
+  "entryPoints": ["./src/index.ts"],
+  "out": "docs",
+  "name": "Carver CLI",
+  "theme": "default",
+  "exclude": ["**/*.test.ts", "**/__tests__/**"],
+  "excludePrivate": true,
+  "excludeExternals": true,
+  "includeVersion": true,
+  "categorizeByGroup": true,
+  "categoryOrder": ["Commands", "Utilities", "*"]
+}

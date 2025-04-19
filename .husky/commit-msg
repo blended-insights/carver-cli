@@ -1,0 +1,4 @@
+#!/usr/bin/env sh
+
+# Hook created using Husky
+npx --no -- commitlint --edit ${1}

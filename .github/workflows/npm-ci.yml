@@ -1,0 +1,33 @@
+name: Lock Dependencies
+
+on:
+  push:
+    paths:
+      - 'package.json'
+    branches:
+      - main
+      - develop
+
+jobs:
+  lock:
+    name: Update package-lock.json
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Install dependencies
+        run: npm ci
+          
+      - name: Commit package-lock.json
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "chore: update package-lock.json [skip ci]"
+          file_pattern: package-lock.json

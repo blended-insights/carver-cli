@@ -1,0 +1,88 @@
+{
+  "name": "carver-cli",
+  "version": "0.0.1",
+  "description": "The Carver CLI is a lightweight, developer-friendly command-line interface that watches local file changes and synchronizes with Carver's cloud services to provide intelligent, context-aware AI assistance for software development workflows.",
+  "homepage": "https://github.com/blended-insights/carver-cli#readme",
+  "bugs": {
+    "url": "https://github.com/blended-insights/carver-cli/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blended-insights/carver-cli.git"
+  },
+  "files": [
+    "bin",
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "ai-assisted",
+    "development",
+    "cli",
+    "code-context",
+    "ast",
+    "developer-tools",
+    "software-development",
+    "workflow",
+    "typescript",
+    "coding-assistant",
+    "file-watcher",
+    "git-integration",
+    "productivity",
+    "code-analysis",
+    "prompt-engineering"
+  ],
+  "author": "Jamie Thompson",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node ./bin/carver.js",
+    "dev": "ts-node ./src/index.ts",
+    "lint": "eslint . --ext .ts",
+    "test": "echo 'No tests yet!'",
+    "prepare": "husky",
+    "prepublishOnly": "npm run build",
+    "semantic-release": "semantic-release"
+  },
+  "bin": {
+    "carver": "./bin/carver.js"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "19.8.0",
+    "@commitlint/config-conventional": "19.8.0",
+    "@semantic-release/changelog": "6.0.3",
+    "@semantic-release/git": "10.0.1",
+    "@types/fs-extra": "^11.0.4",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.27",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "15.5.0",
+    "rimraf": "^6.0.1",
+    "semantic-release": "^24.2.3",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typedoc": "^0.28.2",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "axios": "^1.6.7",
+    "chokidar": "^4.0.3",
+    "commander": "^13.1.0",
+    "conf": "^12.0.0",
+    "fs-extra": "^11.2.0",
+    "keytar": "^7.9.0",
+    "simple-git": "^3.22.0",
+    "socket.io-client": "^4.7.5",
+    "winston": "^3.17.0"
+  }
+}
