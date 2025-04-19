@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/blended-insights/carver-cli/compare/v1.1.0...v1.2.0) (2025-04-19)
+
+
+### Features
+
+* add docs ([a731c74](https://github.com/blended-insights/carver-cli/commit/a731c74ad34fbeb065f2abcdc54cc50baabec6ec))
+
 # [1.1.0](https://github.com/blended-insights/carver-cli/compare/v1.0.0...v1.1.0) (2025-04-19)
 
 
