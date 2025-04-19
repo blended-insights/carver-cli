@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/blended-insights/carver-cli/compare/v1.2.0...v1.3.0) (2025-04-19)
+
+
+### Features
+
+* **watch:** implement enhanced file watcher system ([6d1b8f5](https://github.com/blended-insights/carver-cli/commit/6d1b8f5380ef6b7be8db97c09f56d069f58838c5))
+
 # [1.2.0](https://github.com/blended-insights/carver-cli/compare/v1.1.0...v1.2.0) (2025-04-19)
 
 
