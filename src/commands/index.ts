@@ -3,8 +3,9 @@ import { registerInitCommand } from './init';
 import { registerStatusCommand } from './status';
 import { registerWatchCommand } from './watch';
 import { registerPromptCommand } from './prompt';
-import { registerLoginCommand } from './login';
+import { createLoginCommand } from './login';
 import { registerLogoutCommand } from './logout';
+import { createSyncCommand } from './sync';
 
 export function loadCommands(program: Command): void {
   // Register all commands
@@ -12,6 +13,9 @@ export function loadCommands(program: Command): void {
   registerStatusCommand(program);
   registerWatchCommand(program);
   registerPromptCommand(program);
-  registerLoginCommand(program);
+  
+  // Register API communication commands
+  createLoginCommand(program);
   registerLogoutCommand(program);
+  createSyncCommand(program);
 }

@@ -4,6 +4,7 @@ import * as simpleGit from "simple-git";
 import { logger } from "../utils/logger";
 import { ConfigService } from "./configService";
 import { ApiService } from "./api";
+import { AuthService } from "./auth";
 
 export interface InitializationOptions {
   key: string;
@@ -41,8 +42,10 @@ export class ProjectInitializer {
       throw new Error("Project is already initialized. Use --force to reinitialize.");
     }
 
-    // Initialize API service
-    const apiService = new ApiService(key);
+    // Initialize Auth service and API service
+    const authService = new AuthService();
+    await authService.authenticateWithApiKey(key);
+    const apiService = new ApiService(authService);
 
     // Create or get project from API
     let projectId = project;
@@ -167,7 +170,8 @@ Initialized: ${new Date().toISOString()}
       const project = await apiService.createProject(params);
       return project;
     } catch (error) {
-      throw new Error(`Failed to create project: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to create project: ${errorMessage}`);
     }
   }
 

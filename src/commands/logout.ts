@@ -1,32 +1,28 @@
 import { Command } from 'commander';
+import { AuthService } from '../services/auth';
 import { logger } from '../utils/logger';
-import { CredentialService } from '../services/credentialService';
 
 export function registerLogoutCommand(program: Command): void {
   program
     .command('logout')
-    .description('Log out and remove stored credentials')
-    .option('--all', 'Remove all stored project credentials')
-    .action(async (options) => {
+    .description('Log out from Carver API')
+    .action(async () => {
       try {
-        const credentialService = new CredentialService();
+        // Initialize auth service
+        const authService = new AuthService();
         
-        // Delete API key
-        const apiKeyDeleted = await credentialService.deleteApiKey();
+        // Check if authenticated
+        const isAuthenticated = await authService.isAuthenticated();
         
-        if (apiKeyDeleted) {
-          logger.info('Successfully logged out from Carver');
-          logger.info('Your API key has been removed from the system keychain');
-        } else {
-          logger.info('No stored credentials found');
+        if (!isAuthenticated) {
+          logger.info('You are not logged in');
+          return;
         }
         
-        // Delete all project credentials if requested
-        if (options.all) {
-          // Note: This feature would require tracking all stored project IDs
-          // This is a placeholder for future implementation
-          logger.info('Removing project credentials is not yet implemented');
-        }
+        // Perform logout
+        await authService.logout();
+        
+        logger.info('Successfully logged out');
       } catch (error) {
         logger.error('Logout failed:', error);
         process.exit(1);
