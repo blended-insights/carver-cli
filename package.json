@@ -1,6 +1,6 @@
 {
   "name": "carver-cli",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Carver CLI is a lightweight, developer-friendly command-line interface that watches local file changes and synchronizes with Carver's cloud services to provide intelligent, context-aware AI assistance for software development workflows.",
   "homepage": "https://github.com/blended-insights/carver-cli#readme",
   "bugs": {
