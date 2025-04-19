@@ -33,14 +33,8 @@ export interface GlobalConfig {
   logFile?: string;
 }
 
-/**
- * File change interface
- */
-export interface FileChange {
-  path: string;
-  type: 'add' | 'change' | 'unlink';
-  content?: string;
-}
+// Re-export file watcher types
+export * from './fileWatcher';
 
 /**
  * Project info interface

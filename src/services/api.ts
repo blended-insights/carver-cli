@@ -151,13 +151,18 @@ export class ApiService {
    * Update file in the project
    * @param projectId Project ID
    * @param filePath File path
-   * @param content File content
+   * @param content File content (string or Buffer)
    * @returns Update result
    */
-  async updateFile(projectId: string, filePath: string, content: string): Promise<any> {
+  async updateFile(projectId: string, filePath: string, content: string | Buffer): Promise<any> {
+    // Convert Buffer to base64 string if needed
+    const contentValue = Buffer.isBuffer(content) ? content.toString('base64') : content;
+    const isBase64 = Buffer.isBuffer(content);
+    
     const response = await this.client.post(`/projects/${projectId}/files`, {
       path: filePath,
-      content,
+      content: contentValue,
+      encoding: isBase64 ? 'base64' : 'utf8',
     });
     return response.data;
   }
@@ -168,9 +173,26 @@ export class ApiService {
    * @param files Array of files to update
    * @returns Update result
    */
-  async updateFiles(projectId: string, files: Array<{ path: string, content: string }>): Promise<any> {
+  async updateFiles(projectId: string, files: Array<{ path: string, content: string | Buffer }>): Promise<any> {
+    // Process files to handle binary content
+    const processedFiles = files.map(file => {
+      if (Buffer.isBuffer(file.content)) {
+        return {
+          path: file.path,
+          content: file.content.toString('base64'),
+          encoding: 'base64',
+        };
+      } else {
+        return {
+          path: file.path,
+          content: file.content,
+          encoding: 'utf8',
+        };
+      }
+    });
+    
     const response = await this.client.post(`/projects/${projectId}/files/batch`, {
-      files,
+      files: processedFiles,
     });
     return response.data;
   }
