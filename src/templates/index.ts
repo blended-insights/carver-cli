@@ -1,13 +1,15 @@
 import defaultTemplate from './default';
 import featureTemplate from './feature';
 import bugfixTemplate from './bugfix';
+import refactorTemplate from './refactor';
 
-type TemplateKey = 'default' | 'feature' | 'bugfix';
+type TemplateKey = 'default' | 'feature' | 'bugfix' | 'refactor';
 
 export const templates: Record<TemplateKey, string> = {
   default: defaultTemplate,
   feature: featureTemplate,
   bugfix: bugfixTemplate,
+  refactor: refactorTemplate,
 };
 
 /**

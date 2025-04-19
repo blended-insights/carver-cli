@@ -1,9 +1,8 @@
 # [1.4.0](https://github.com/blended-insights/carver-cli/compare/v1.3.0...v1.4.0) (2025-04-19)
 
-
 ### Features
 
-* **api:** implement robust API communication layer ([285a27a](https://github.com/blended-insights/carver-cli/commit/285a27ad6ff99e88bf0cb67316ea490a67af63fa))
+- **api:** implement robust API communication layer ([285a27a](https://github.com/blended-insights/carver-cli/commit/285a27ad6ff99e88bf0cb67316ea490a67af63fa))
 
 # [1.3.0](https://github.com/blended-insights/carver-cli/compare/v1.2.0...v1.3.0) (2025-04-19)
 

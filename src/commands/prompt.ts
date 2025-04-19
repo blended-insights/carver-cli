@@ -6,19 +6,40 @@ import * as fs from 'fs';
 import { logger } from '../utils/logger';
 import { ConfigService } from '../services/configService';
 import { ApiService } from '../services/api';
+import { PromptService } from '../services/promptService';
 import { CredentialService } from '../services/credentialService';
+import { AuthService } from '../services/auth';
+
+interface PromptOptions {
+  directory: string;
+  file?: string;
+  template?: string;
+  context?: string[];
+  task?: string;
+  output?: string;
+  clipboard?: boolean;
+  list?: boolean;
+  preview?: boolean;
+  maxTokens?: number;
+  aiSystem?: 'default' | 'openai' | 'anthropic';
+}
 
 export function registerPromptCommand(program: Command): void {
   program
     .command('prompt')
     .description('Generate an AI prompt for your code')
     .option('-d, --directory <path>', 'Project directory', process.cwd())
-    .option('-f, --file <path>', 'Target file for the prompt')
-    .option('-t, --template <n>', 'Prompt template to use')
+    .option('-f, --file <path>', 'Main file for the prompt (target of changes)')
+    .option('-t, --template <name>', 'Prompt template to use (default, feature, bugfix, etc)')
+    .option('-c, --context <paths...>', 'Additional files to include in context')
+    .option('--task <description>', 'Brief description of the development task')
     .option('-o, --output <path>', 'Output file for the prompt')
-    .option('-l, --list', 'List available templates')
-    .option('--context <json>', 'Additional context for prompt generation (JSON string)')
-    .action(async (options) => {
+    .option('--clipboard', 'Copy the prompt to clipboard', false)
+    .option('-l, --list', 'List available templates', false)
+    .option('--preview', 'Preview the prompt without saving to API', false)
+    .option('--max-tokens <number>', 'Maximum tokens for the prompt')
+    .option('--ai-system <system>', 'Target AI system (default, openai, anthropic)')
+    .action(async (options: PromptOptions) => {
       try {
         // Normalize directory path
         const directory = path.resolve(options.directory);
@@ -43,7 +64,7 @@ export function registerPromptCommand(program: Command): void {
           process.exit(1);
         }
 
-        // Get API key
+        // Get credentials
         const credentialService = new CredentialService();
         let apiKey = config.apiKey;
 
@@ -59,71 +80,81 @@ export function registerPromptCommand(program: Command): void {
           }
         }
 
-        // Initialize API service
-        const apiService = new ApiService(apiKey);
+        // Initialize services
+        const authService = new AuthService();
+        const apiService = new ApiService(authService);
+        const promptService = new PromptService(apiService, configService, directory);
 
         // List templates if requested
         if (options.list) {
-          logger.info('Fetching available templates...');
-          try {
-            const templates = await apiService.getTemplates(config.projectId);
-            console.log('\nAvailable templates:');
-            if (templates.length === 0) {
-              console.log('  No templates available');
-            } else {
-              templates.forEach((template) => {
-                console.log(`  - ${template}`);
-              });
-            }
-            console.log('\nUse with: carver prompt -t <template_name>');
-            return;
-          } catch (error) {
-            logger.error('Failed to fetch templates:', error);
-            process.exit(1);
+          const localTemplates = promptService.getAvailableTemplates();
+
+          console.log('\nAvailable templates:');
+          if (localTemplates.length === 0) {
+            console.log('  No templates available');
+          } else {
+            localTemplates.forEach((template) => {
+              console.log(`  - ${template}`);
+            });
           }
+
+          // Also check for remote templates
+          try {
+            logger.info('Fetching remote templates...');
+            const remoteTemplates = await apiService.getTemplates(config.projectId);
+
+            if (remoteTemplates.length > 0) {
+              console.log('\nRemote templates:');
+              remoteTemplates
+                .filter((t) => !localTemplates.includes(t))
+                .forEach((template) => {
+                  console.log(`  - ${template} (remote)`);
+                });
+            }
+          } catch (error) {
+            logger.debug('Failed to fetch remote templates:', error);
+          }
+
+          console.log('\nUse with: carver prompt -t <template_name>');
+          return;
         }
 
-        // Validate template
-        if (!options.template) {
-          logger.error(
-            'Template is required. Use --template option or -l to list available templates.',
-          );
-          process.exit(1);
-        }
-
-        // Validate file path if provided
-        let relativePath: string | undefined;
+        // Normalize file path if provided
+        let filePath: string | undefined;
         if (options.file) {
-          const filePath = path.resolve(directory, options.file);
+          filePath = path.resolve(directory, options.file);
 
           if (!fs.existsSync(filePath)) {
             logger.error(`File does not exist: ${filePath}`);
             process.exit(1);
           }
-
-          // Convert to relative path
-          relativePath = path.relative(directory, filePath);
         }
 
-        // Parse context if provided
-        let context: any = undefined;
-        if (options.context) {
-          try {
-            context = JSON.parse(options.context);
-          } catch (error) {
-            logger.error('Invalid JSON in context parameter. Must be a valid JSON string.');
-            process.exit(1);
+        // Normalize context file paths
+        const contextFiles: string[] = [];
+        if (options.context && options.context.length > 0) {
+          for (const contextPath of options.context) {
+            const fullPath = path.resolve(directory, contextPath);
+            if (fs.existsSync(fullPath)) {
+              contextFiles.push(fullPath);
+            } else {
+              logger.warn(`Context file not found, skipping: ${contextPath}`);
+            }
           }
         }
 
         // Generate prompt
         logger.info('Generating prompt...');
         try {
-          const prompt = await apiService.generatePrompt({
+          const prompt = await promptService.generatePrompt({
             projectId: config.projectId,
-            template: options.template,
-            filePath: relativePath,
-            context,
+            templateName: options.template,
+            filePath,
+            contextFiles,
+            taskDescription: options.task,
+            maxTokens: options.maxTokens ? parseInt(options.maxTokens.toString()) : undefined,
+            aiSystem: options.aiSystem,
+            previewMode: options.preview,
           });
 
           // Output prompt
@@ -131,11 +162,33 @@ export function registerPromptCommand(program: Command): void {
             const outputPath = path.resolve(options.output);
             fs.writeFileSync(outputPath, prompt);
             logger.info(`Prompt saved to ${outputPath}`);
-          } else {
-            // Print to console
+          }
+
+          // Copy to clipboard if requested
+          if (options.clipboard) {
+            try {
+              const clipboardy = require('clipboardy');
+              clipboardy.writeSync(prompt);
+              logger.info('Prompt copied to clipboard');
+            } catch (error) {
+              logger.error('Failed to copy to clipboard:', error);
+            }
+          }
+
+          // Print preview to console
+          if (!options.output || options.preview) {
             console.log('\n=== Generated Prompt ===\n');
             console.log(prompt);
             console.log('\n=========================\n');
+          }
+
+          // Show token estimation
+          const chars = prompt.length;
+          const estimatedTokens = Math.ceil(chars / 4);
+          console.log(`Estimated tokens: ~${estimatedTokens}`);
+
+          if (options.preview) {
+            console.log('Preview mode: Prompt was not saved to API');
           }
         } catch (error) {
           logger.error('Failed to generate prompt:', error);
