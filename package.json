@@ -41,6 +41,7 @@
     "build": "tsc",
     "start": "node ./bin/carver.js",
     "dev": "ts-node ./src/index.ts",
+    "docs": "typedoc src",
     "lint": "eslint . --ext .ts",
     "lint:fix": "eslint . --ext .ts --fix",
     "test": "echo 'No tests yet!'",
