@@ -7,7 +7,7 @@ type TemplateKey = 'default' | 'feature' | 'bugfix';
 export const templates: Record<TemplateKey, string> = {
   default: defaultTemplate,
   feature: featureTemplate,
-  bugfix: bugfixTemplate
+  bugfix: bugfixTemplate,
 };
 
 /**

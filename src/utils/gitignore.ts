@@ -18,7 +18,7 @@ export async function getIgnorePatterns(projectRoot: string): Promise<string[]> 
     '**/coverage/**',
     '**/build/**',
     // Additional defaults for Carver-specific files
-    '**/.carver/**'
+    '**/.carver/**',
   ];
   
   try {

@@ -44,8 +44,8 @@ export class PromptService {
             path: filePath,
             name: filename,
             extension,
-            content
-          }
+            content,
+          },
         };
         
         logger.debug(`Added file context for ${filename}`);
@@ -59,7 +59,7 @@ export class PromptService {
       const prompt = await this.apiService.generatePrompt({
         projectId,
         template: template || 'default',
-        context
+        context,
       });
       
       return prompt;

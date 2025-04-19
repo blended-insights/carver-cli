@@ -6,18 +6,18 @@ jest.mock('winston', () => ({
   createLogger: jest.fn().mockReturnValue({
     level: 'info',
     add: jest.fn(),
-    debug: jest.fn()
+    debug: jest.fn(),
   }),
   format: {
     timestamp: jest.fn(),
     colorize: jest.fn(),
     printf: jest.fn(),
-    combine: jest.fn()
+    combine: jest.fn(),
   },
   transports: {
     Console: jest.fn(),
-    File: jest.fn()
-  }
+    File: jest.fn(),
+  },
 }));
 
 describe('Logger Utility', () => {
@@ -51,7 +51,7 @@ describe('Logger Utility', () => {
       initializeLogger();
       
       expect(winston.transports.File).toHaveBeenCalledWith({
-        filename: 'test.log'
+        filename: 'test.log',
       });
       expect(logger.add).toHaveBeenCalled();
       

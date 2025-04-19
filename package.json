@@ -42,6 +42,7 @@
     "start": "node ./bin/carver.js",
     "dev": "ts-node ./src/index.ts",
     "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
     "test": "echo 'No tests yet!'",
     "prepare": "husky",
     "prepublishOnly": "npm run build",

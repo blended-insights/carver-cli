@@ -68,7 +68,7 @@ export class ConfigService {
     const currentConfig = this.getConfig() || {};
     const updatedConfig = {
       ...currentConfig,
-      ...config
+      ...config,
     };
     
     this.saveConfig(updatedConfig);

@@ -45,8 +45,8 @@ export class FileSystemService {
       ignoreInitial: false,
       awaitWriteFinish: {
         stabilityThreshold: 2000,
-        pollInterval: 100
-      }
+        pollInterval: 100,
+      },
     });
     
     this.watcher

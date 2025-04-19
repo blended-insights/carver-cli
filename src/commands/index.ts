@@ -3,12 +3,15 @@ import { registerInitCommand } from './init';
 import { registerStatusCommand } from './status';
 import { registerWatchCommand } from './watch';
 import { registerPromptCommand } from './prompt';
-// Import other commands...
+import { registerLoginCommand } from './login';
+import { registerLogoutCommand } from './logout';
 
 export function loadCommands(program: Command): void {
+  // Register all commands
   registerInitCommand(program);
   registerStatusCommand(program);
   registerWatchCommand(program);
   registerPromptCommand(program);
-  // Register other commands...
+  registerLoginCommand(program);
+  registerLogoutCommand(program);
 }
