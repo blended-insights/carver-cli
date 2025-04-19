@@ -124,6 +124,7 @@ npm run build
 The Carver CLI follows a modular architecture:
 
 - **Commands**: Implementations for CLI commands
+
   - `init.ts` - Initialize a project
   - `status.ts` - Check project status
   - `watch.ts` - Watch for file changes
@@ -132,21 +133,24 @@ The Carver CLI follows a modular architecture:
   - `logout.ts` - Remove stored credentials
 
 - **Services**: Core service logic
+
   - `api.ts` - API communication layer
-  - `configService.ts` - Project configuration 
+  - `configService.ts` - Project configuration
   - `credentialService.ts` - Secure credential storage
   - `fileWatcher.ts` - File change monitoring
   - `projectInitializer.ts` - Project setup
 
 - **Utils**: Utility functions
+
   - `logger.ts` - Logging system with verbosity levels
-  - `config.ts` - Global configuration 
+  - `config.ts` - Global configuration
 
 - **Types**: TypeScript type definitions for type safety
 
 ## File Watching
 
 The CLI uses Chokidar to efficiently watch for file changes with:
+
 - Debouncing to prevent excessive API calls
 - Ignore patterns from `.gitignore` and `.carverignore`
 - Efficient change batching
@@ -154,6 +158,7 @@ The CLI uses Chokidar to efficiently watch for file changes with:
 ## Secure Credential Storage
 
 The CLI securely stores your API key in your system's keychain using the `keytar` library, which leverages:
+
 - macOS: Keychain
 - Windows: Credential Vault
 - Linux: Secret Service API/libsecret
@@ -161,6 +166,7 @@ The CLI securely stores your API key in your system's keychain using the `keytar
 ## Configuration
 
 Configuration is stored in two locations:
+
 - Global: `~/.carver/config.json`
 - Project: `.carver/config.json` in project directory
 

@@ -13,7 +13,7 @@ export function loadCommands(program: Command): void {
   registerStatusCommand(program);
   registerWatchCommand(program);
   registerPromptCommand(program);
-  
+
   // Register API communication commands
   createLoginCommand(program);
   registerLogoutCommand(program);

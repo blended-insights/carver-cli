@@ -1,27 +1,27 @@
 /* eslint-disable no-console */
 
-import { Command } from "commander";
-import * as path from "path";
-import * as readline from "readline";
-import { logger } from "../utils/logger";
-import { FileWatcher } from "../services/fileWatcher";
-import { FileChange } from "../types/fileWatcher";
-import { ConfigService } from "../services/configService";
-import { ApiService } from "../services/api";
-import { CredentialService } from "../services/credentialService";
+import { Command } from 'commander';
+import * as path from 'path';
+import * as readline from 'readline';
+import { logger } from '../utils/logger';
+import { FileWatcher } from '../services/fileWatcher';
+import { FileChange } from '../types/fileWatcher';
+import { ConfigService } from '../services/configService';
+import { ApiService } from '../services/api';
+import { CredentialService } from '../services/credentialService';
 
 export function registerWatchCommand(program: Command): void {
   program
-    .command("watch")
-    .description("Watch for file changes and sync with Carver")
-    .option("-d, --directory <path>", "Project directory to watch", process.cwd())
-    .option("-i, --ignore <patterns>", "Additional patterns to ignore (comma-separated)")
-    .option("--no-git-ignore", "Do not use .gitignore patterns")
-    .option("--debounce <ms>", "Debounce delay in milliseconds", "500")
-    .option("--batch <ms>", "Batch interval in milliseconds", "2000")
-    .option("--dry-run", "Only log changes without syncing to server")
-    .option("--log-level <level>", "Log level (debug, info, warn, error)", "info")
-    .option("--interactive", "Enable interactive mode with commands")
+    .command('watch')
+    .description('Watch for file changes and sync with Carver')
+    .option('-d, --directory <path>', 'Project directory to watch', process.cwd())
+    .option('-i, --ignore <patterns>', 'Additional patterns to ignore (comma-separated)')
+    .option('--no-git-ignore', 'Do not use .gitignore patterns')
+    .option('--debounce <ms>', 'Debounce delay in milliseconds', '500')
+    .option('--batch <ms>', 'Batch interval in milliseconds', '2000')
+    .option('--dry-run', 'Only log changes without syncing to server')
+    .option('--log-level <level>', 'Log level (debug, info, warn, error)', 'info')
+    .option('--interactive', 'Enable interactive mode with commands')
     .action(async (options) => {
       try {
         // Set log level if provided
@@ -43,7 +43,7 @@ export function registerWatchCommand(program: Command): void {
         // Get project configuration
         const projectConfig = configService.getConfig();
         if (!projectConfig || !projectConfig.projectId) {
-          logger.error("Invalid project configuration");
+          logger.error('Invalid project configuration');
           process.exit(1);
         }
 
@@ -74,21 +74,21 @@ export function registerWatchCommand(program: Command): void {
 
         // Add custom ignore patterns if provided
         if (options.ignore) {
-          const patterns = options.ignore.split(",").map((p: string) => p.trim());
+          const patterns = options.ignore.split(',').map((p: string) => p.trim());
           patterns.forEach((pattern: string) => {
             watcher.addIgnorePattern(pattern);
           });
         }
 
         // Register file change handler
-        watcher.on("changes", async (changes: FileChange[]) => {
+        watcher.on('changes', async (changes: FileChange[]) => {
           logger.info(`Detected ${changes.length} file changes`);
 
           // Skip syncing if in dry-run mode
           if (options.dryRun) {
             changes.forEach((change) => {
               logger.info(
-                `[DRY RUN] ${change.type.toUpperCase()}: ${change.path}${change.isBinary ? " (binary)" : ""}`,
+                `[DRY RUN] ${change.type.toUpperCase()}: ${change.path}${change.isBinary ? ' (binary)' : ''}`,
               );
             });
             return;
@@ -101,14 +101,14 @@ export function registerWatchCommand(program: Command): void {
 
             // Process each change
             for (const change of changes) {
-              if (change.type === "add" || change.type === "change") {
+              if (change.type === 'add' || change.type === 'change') {
                 if (change.content !== undefined) {
                   filesToUpdate.push({
                     path: change.path,
                     content: change.content,
                   });
                 }
-              } else if (change.type === "unlink") {
+              } else if (change.type === 'unlink') {
                 filesToDelete.push(change.path);
               }
             }
@@ -142,21 +142,21 @@ export function registerWatchCommand(program: Command): void {
               `Sync completed successfully (${filesToUpdate.length} updates, ${filesToDelete.length} deletions)`,
             );
           } catch (error) {
-            logger.error("Failed to sync changes:", error);
+            logger.error('Failed to sync changes:', error);
           }
         });
 
         // Handle watcher events
-        watcher.on("error", (error) => {
-          logger.error("Watch error:", error);
+        watcher.on('error', (error) => {
+          logger.error('Watch error:', error);
         });
 
-        watcher.on("paused", () => {
-          logger.info("Watcher paused");
+        watcher.on('paused', () => {
+          logger.info('Watcher paused');
         });
 
-        watcher.on("resumed", () => {
-          logger.info("Watcher resumed");
+        watcher.on('resumed', () => {
+          logger.info('Watcher resumed');
         });
 
         // Start watching
@@ -172,17 +172,17 @@ export function registerWatchCommand(program: Command): void {
           setupInteractiveMode(watcher, apiService, projectConfig.projectId);
         } else {
           // Just show basic instructions
-          logger.info("Watching for changes (Press Ctrl+C to stop)");
+          logger.info('Watching for changes (Press Ctrl+C to stop)');
         }
 
         // Exit handler
-        process.on("SIGINT", async () => {
-          logger.info("Stopping watcher...");
+        process.on('SIGINT', async () => {
+          logger.info('Stopping watcher...');
           await watcher.stop();
           process.exit(0);
         });
       } catch (error) {
-        logger.error("Watch command failed:", error);
+        logger.error('Watch command failed:', error);
         process.exit(1);
       }
     });
@@ -202,71 +202,71 @@ function setupInteractiveMode(
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
-    prompt: "carver> ",
+    prompt: 'carver> ',
   });
 
-  logger.info("Interactive mode enabled. Available commands:");
-  logger.info("  status   - Show watcher status");
-  logger.info("  pause    - Pause watching");
-  logger.info("  resume   - Resume watching");
-  logger.info("  sync     - Force sync project with server");
-  logger.info("  clear    - Clear console");
-  logger.info("  help     - Show this help");
-  logger.info("  exit     - Exit watcher");
-  logger.info("Press Enter to show prompt");
+  logger.info('Interactive mode enabled. Available commands:');
+  logger.info('  status   - Show watcher status');
+  logger.info('  pause    - Pause watching');
+  logger.info('  resume   - Resume watching');
+  logger.info('  sync     - Force sync project with server');
+  logger.info('  clear    - Clear console');
+  logger.info('  help     - Show this help');
+  logger.info('  exit     - Exit watcher');
+  logger.info('Press Enter to show prompt');
 
   rl.prompt();
 
-  rl.on("line", async (line: string) => {
+  rl.on('line', async (line: string) => {
     const command = line.trim().toLowerCase();
 
     try {
       switch (command) {
-        case "status":
+        case 'status':
           const status = watcher.getStatus();
           logger.info(
-            `Status: ${status.active ? "Active" : "Inactive"}${status.paused ? " (Paused)" : ""}`,
+            `Status: ${status.active ? 'Active' : 'Inactive'}${status.paused ? ' (Paused)' : ''}`,
           );
           logger.info(`Directory: ${status.projectRoot}`);
           logger.info(`Cached files: ${status.cachedFiles}`);
           logger.info(`Queue size: ${status.queueSize}`);
           break;
 
-        case "pause":
+        case 'pause':
           watcher.pause();
           break;
 
-        case "resume":
+        case 'resume':
           watcher.resume();
           break;
 
-        case "sync":
-          logger.info("Forcing project sync...");
+        case 'sync':
+          logger.info('Forcing project sync...');
           try {
             const result = await apiService.syncProject(projectId);
-            logger.info("Sync completed successfully");
+            logger.info('Sync completed successfully');
           } catch (error) {
-            logger.error("Sync failed:", error);
+            logger.error('Sync failed:', error);
           }
           break;
 
-        case "clear":
+        case 'clear':
           console.clear();
           break;
 
-        case "help":
-          logger.info("Available commands:");
-          logger.info("  status   - Show watcher status");
-          logger.info("  pause    - Pause watching");
-          logger.info("  resume   - Resume watching");
-          logger.info("  sync     - Force sync project with server");
-          logger.info("  clear    - Clear console");
-          logger.info("  help     - Show this help");
-          logger.info("  exit     - Exit watcher");
+        case 'help':
+          logger.info('Available commands:');
+          logger.info('  status   - Show watcher status');
+          logger.info('  pause    - Pause watching');
+          logger.info('  resume   - Resume watching');
+          logger.info('  sync     - Force sync project with server');
+          logger.info('  clear    - Clear console');
+          logger.info('  help     - Show this help');
+          logger.info('  exit     - Exit watcher');
           break;
 
-        case "exit":
-          logger.info("Stopping watcher...");
+        case 'exit':
+          logger.info('Stopping watcher...');
           await watcher.stop();
           rl.close();
           process.exit(0);
@@ -280,7 +280,7 @@ function setupInteractiveMode(
           break;
       }
     } catch (error) {
-      logger.error("Command failed:", error);
+      logger.error('Command failed:', error);
     }
 
     rl.prompt();

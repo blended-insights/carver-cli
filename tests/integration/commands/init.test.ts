@@ -30,28 +30,30 @@ describe('Init Command Integration', () => {
     // Mock API key and project ID for test
     const testApiKey = 'test-api-key';
     const testProjectId = 'test-project-id';
-    
+
     // Run the init command
-    await execAsync(`node ../../bin/carver.js init --key ${testApiKey} --project ${testProjectId} --directory ${TEST_DIR}`);
-    
+    await execAsync(
+      `node ../../bin/carver.js init --key ${testApiKey} --project ${testProjectId} --directory ${TEST_DIR}`,
+    );
+
     // Verify .carver directory was created
     expect(fs.existsSync(path.join(TEST_DIR, '.carver'))).toBe(true);
-    
+
     // Verify config file was created with correct values
     const configPath = path.join(TEST_DIR, '.carver', 'config.json');
     expect(fs.existsSync(configPath)).toBe(true);
-    
+
     const configContent = fs.readFileSync(configPath, 'utf-8');
     const config = JSON.parse(configContent);
-    
+
     expect(config.apiKey).toBe(testApiKey);
     expect(config.projectId).toBe(testProjectId);
     expect(config).toHaveProperty('lastSync');
-    
+
     // Verify .gitignore was updated
     const gitignorePath = path.join(TEST_DIR, '.gitignore');
     expect(fs.existsSync(gitignorePath)).toBe(true);
-    
+
     const gitignoreContent = fs.readFileSync(gitignorePath, 'utf-8');
     expect(gitignoreContent).toContain('.carver/');
   }, 10000); // Increase timeout to 10 seconds for integration test

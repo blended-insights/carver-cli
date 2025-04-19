@@ -5,12 +5,53 @@ import { logger } from './logger';
 
 // Binary file detection patterns
 const BINARY_EXTENSIONS = [
-  '.exe', '.dll', '.so', '.dylib', '.bin', '.dat', '.zip', '.tar', '.gz', '.7z', '.rar',
-  '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.ico', '.tif', '.tiff', '.webp', '.avif',
-  '.mp3', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.wav', '.flac', '.ogg',
-  '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx',
-  '.ttf', '.otf', '.woff', '.woff2', '.eot',
-  '.o', '.obj', '.pyc', '.pyo', '.class',
+  '.exe',
+  '.dll',
+  '.so',
+  '.dylib',
+  '.bin',
+  '.dat',
+  '.zip',
+  '.tar',
+  '.gz',
+  '.7z',
+  '.rar',
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.gif',
+  '.bmp',
+  '.ico',
+  '.tif',
+  '.tiff',
+  '.webp',
+  '.avif',
+  '.mp3',
+  '.mp4',
+  '.avi',
+  '.mov',
+  '.wmv',
+  '.flv',
+  '.wav',
+  '.flac',
+  '.ogg',
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.ttf',
+  '.otf',
+  '.woff',
+  '.woff2',
+  '.eot',
+  '.o',
+  '.obj',
+  '.pyc',
+  '.pyo',
+  '.class',
 ];
 
 /**
@@ -24,26 +65,26 @@ export function isBinaryFile(filePath: string): boolean {
   if (BINARY_EXTENSIONS.includes(ext)) {
     return true;
   }
-  
+
   try {
     // Sample first 8KB of the file to check for binary content
     const fd = fs.openSync(filePath, 'r');
     const buffer = Buffer.alloc(8 * 1024); // 8KB buffer
     const bytesRead = fs.readSync(fd, buffer, 0, buffer.length, 0);
     fs.closeSync(fd);
-    
+
     // If we couldn't read anything, treat as non-binary
     if (bytesRead === 0) {
       return false;
     }
-    
+
     // Check for null bytes in the first 8KB
     for (let i = 0; i < bytesRead; i++) {
       if (buffer[i] === 0) {
         return true;
       }
     }
-    
+
     // Count control characters (non-CR, non-LF)
     let controlChars = 0;
     for (let i = 0; i < bytesRead; i++) {
@@ -52,9 +93,9 @@ export function isBinaryFile(filePath: string): boolean {
         controlChars++;
       }
     }
-    
+
     // If more than 10% of the first 8KB is control characters, consider it binary
-    return (controlChars / bytesRead) > 0.1;
+    return controlChars / bytesRead > 0.1;
   } catch (error) {
     logger.warn(`Error checking if file is binary: ${filePath}`, error);
     return false;
@@ -101,15 +142,15 @@ export function hashFileStream(filePath: string, algorithm = 'sha256'): Promise<
   return new Promise((resolve, reject) => {
     const hashSum = crypto.createHash(algorithm);
     const stream = fs.createReadStream(filePath);
-    
+
     stream.on('data', (data) => {
       hashSum.update(data);
     });
-    
+
     stream.on('end', () => {
       resolve(hashSum.digest('hex'));
     });
-    
+
     stream.on('error', (error) => {
       reject(error);
     });
@@ -127,12 +168,12 @@ export function hashFileStream(filePath: string, algorithm = 'sha256'): Promise<
 export async function getFileHash(filePath: string, algorithm = 'sha256'): Promise<string> {
   try {
     const stats = fs.statSync(filePath);
-    
+
     // Use stream-based hashing for files larger than 10MB
     if (stats.size > 10 * 1024 * 1024) {
       return hashFileStream(filePath, algorithm);
     }
-    
+
     // Use regular hashing for smaller files
     return hashFile(filePath, algorithm);
   } catch (error) {
@@ -155,7 +196,7 @@ export async function processFile(filePath: string): Promise<{
     const binary = isBinaryFile(filePath);
     let content: string | Buffer;
     let hash: string;
-    
+
     if (binary) {
       // For binary files, read as buffer and calculate hash
       content = fs.readFileSync(filePath);
@@ -165,7 +206,7 @@ export async function processFile(filePath: string): Promise<{
       content = fs.readFileSync(filePath, 'utf-8');
       hash = hashContent(content);
     }
-    
+
     return {
       content,
       hash,

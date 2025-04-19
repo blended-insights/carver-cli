@@ -35,7 +35,7 @@ const DEFAULT_IGNORE_PATTERNS = [
   // Logs
   '**/logs/**',
   '**/*.log',
-  // Cache 
+  // Cache
   '**/.cache/**',
   '**/.npm/**',
   '**/.eslintcache',
@@ -56,27 +56,27 @@ const DEFAULT_IGNORE_PATTERNS = [
 function convertGitignorePatternToGlob(pattern: string): string {
   // Trim the pattern
   let trimmedPattern = pattern.trim();
-  
+
   // Skip empty lines and comments
   if (!trimmedPattern || trimmedPattern.startsWith('#')) {
     return '';
   }
-  
+
   // Handle negation (includes) - not fully supported yet
   if (trimmedPattern.startsWith('!')) {
     return '';
   }
-  
+
   // Remove leading slash if present (gitignore uses it for repo root)
   if (trimmedPattern.startsWith('/')) {
     trimmedPattern = trimmedPattern.substring(1);
   }
-  
+
   // Convert directory pattern
   if (trimmedPattern.endsWith('/')) {
     return `**/${trimmedPattern}**`;
   }
-  
+
   // Convert file pattern (simple glob)
   return `**/${trimmedPattern}`;
 }
@@ -89,8 +89,8 @@ function convertGitignorePatternToGlob(pattern: string): string {
 function parseIgnoreFileContent(content: string): string[] {
   return content
     .split(/\r?\n/) // Split by newlines (cross-platform)
-    .map(line => convertGitignorePatternToGlob(line))
-    .filter(pattern => pattern !== ''); // Remove empty patterns
+    .map((line) => convertGitignorePatternToGlob(line))
+    .filter((pattern) => pattern !== ''); // Remove empty patterns
 }
 
 /**
@@ -109,7 +109,7 @@ function readIgnoreFile(filePath: string): string[] {
   } catch (error) {
     logger.warn(`Failed to parse ${path.basename(filePath)}:`, error);
   }
-  
+
   return [];
 }
 
@@ -121,15 +121,15 @@ export function getGlobalIgnorePatterns(): string[] {
   const homeDir = os.homedir();
   const globalGitignorePath = path.join(homeDir, '.gitignore');
   const globalCarverignorePath = path.join(homeDir, '.carverignore');
-  
+
   const patterns: string[] = [];
-  
+
   // Add patterns from global .gitignore
   patterns.push(...readIgnoreFile(globalGitignorePath));
-  
+
   // Add patterns from global .carverignore
   patterns.push(...readIgnoreFile(globalCarverignorePath));
-  
+
   return patterns;
 }
 
@@ -143,34 +143,30 @@ export async function getIgnorePatterns(
   projectRoot: string,
   options: IgnoreOptions = {},
 ): Promise<string[]> {
-  const {
-    useGitignore = true,
-    useCarverignore = true,
-    additionalPatterns = [],
-  } = options;
-  
+  const { useGitignore = true, useCarverignore = true, additionalPatterns = [] } = options;
+
   // Start with default patterns
   const patterns = [...DEFAULT_IGNORE_PATTERNS];
-  
+
   // Add global ignore patterns
   patterns.push(...getGlobalIgnorePatterns());
-  
+
   // Add project-specific ignore patterns
   if (useGitignore) {
     const gitignorePath = path.join(projectRoot, '.gitignore');
     patterns.push(...readIgnoreFile(gitignorePath));
   }
-  
+
   if (useCarverignore) {
     const carverignorePath = path.join(projectRoot, '.carverignore');
     patterns.push(...readIgnoreFile(carverignorePath));
   }
-  
+
   // Add any additional patterns
   if (additionalPatterns.length > 0) {
     patterns.push(...additionalPatterns);
     logger.debug(`Added ${additionalPatterns.length} additional ignore patterns`);
   }
-  
+
   return patterns;
 }

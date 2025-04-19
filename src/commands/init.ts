@@ -21,50 +21,52 @@ export function registerInitCommand(program: Command): void {
     .action(async (options) => {
       try {
         logger.info('Initializing Carver project...');
-        
+
         // Normalize directory path
         const directory = path.resolve(options.directory);
         logger.debug(`Using directory: ${directory}`);
-        
+
         // Verify directory exists
         if (!fs.existsSync(directory)) {
           logger.error(`Directory does not exist: ${directory}`);
           process.exit(1);
         }
-        
+
         // Get API key
         let apiKey = options.key || process.env.CARVER_API_KEY;
         const credentialService = new CredentialService();
-        
+
         if (!apiKey) {
           // Try to get stored API key
           apiKey = await credentialService.getApiKey();
-          
+
           if (!apiKey) {
-            logger.error('API key is required. Use --key option or set CARVER_API_KEY environment variable.');
+            logger.error(
+              'API key is required. Use --key option or set CARVER_API_KEY environment variable.',
+            );
             process.exit(1);
           }
         }
-        
+
         // Verify API key
         logger.debug('Verifying API key...');
         const apiService = new ApiService(apiKey);
         const isKeyValid = await apiService.verifyApiKey();
-        
+
         if (!isKeyValid) {
           logger.error('Invalid API key. Please check your credentials.');
           process.exit(1);
         }
-        
+
         logger.debug('API key verified successfully');
-        
+
         // Store API key securely if requested
         if (options.storeKey) {
           logger.debug('Storing API key in system keychain...');
           await credentialService.storeApiKey(apiKey);
           logger.info('API key stored securely');
         }
-        
+
         // Initialize project
         const initializer = new ProjectInitializer();
         const initResult = await initializer.initialize({
@@ -76,7 +78,7 @@ export function registerInitCommand(program: Command): void {
           useGit: options.git !== false,
           force: options.force === true,
         });
-        
+
         // Store project credentials
         if (initResult.projectId) {
           await credentialService.storeProjectCredentials(initResult.projectId, {
@@ -85,7 +87,7 @@ export function registerInitCommand(program: Command): void {
             lastSync: new Date().toISOString(),
           });
         }
-        
+
         logger.info(`Project "${initResult.projectName}" initialized successfully`);
         logger.info(`Project ID: ${initResult.projectId}`);
         logger.info('Run "carver status" to see project details');

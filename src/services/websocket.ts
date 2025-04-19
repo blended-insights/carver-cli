@@ -23,21 +23,22 @@ export class WebSocketService extends EventEmitter {
   private timeout: number;
   private connected = false;
   private reconnecting = false;
-  private messageQueue: { event: string, data: any }[] = [];
+  private messageQueue: { event: string; data: any }[] = [];
   private projectId?: string;
-  
+
   constructor(authService: AuthService, options?: WebSocketOptions) {
     super();
-    
+
     this.authService = authService;
     const config = getConfig();
-    
-    this.wsEndpoint = options?.wsEndpoint || config.wsEndpoint || config.apiEndpoint?.replace(/^http/, 'ws') || '';
+
+    this.wsEndpoint =
+      options?.wsEndpoint || config.wsEndpoint || config.apiEndpoint?.replace(/^http/, 'ws') || '';
     this.reconnectionAttempts = options?.reconnectionAttempts || 10;
     this.reconnectionDelay = options?.reconnectionDelay || 1000;
     this.timeout = options?.timeout || 30000;
   }
-  
+
   /**
    * Connect to the WebSocket server
    * @param projectId Optional project ID to scope the connection
@@ -53,13 +54,13 @@ export class WebSocketService extends EventEmitter {
         return;
       }
     }
-    
+
     this.projectId = projectId;
-    
+
     try {
       // Get authentication token
       const token = await this.authService.getAccessToken();
-      
+
       // Initialize socket connection
       this.socket = io(this.wsEndpoint, {
         transports: ['websocket'],
@@ -72,30 +73,30 @@ export class WebSocketService extends EventEmitter {
           projectId,
         },
       });
-      
+
       // Set up event handlers
       this.setupEventHandlers();
-      
+
       // Wait for connection or failure
       await new Promise<void>((resolve, reject) => {
         if (!this.socket) {
           reject(new Error('Socket is not initialized'));
           return;
         }
-        
+
         const onConnect = () => {
           this.connected = true;
           this.reconnecting = false;
           resolve();
         };
-        
+
         const onConnectError = (error: Error) => {
           reject(error);
         };
-        
+
         this.socket.once('connect', onConnect);
         this.socket.once('connect_error', onConnectError);
-        
+
         // Cleanup if connection times out
         const timeout = setTimeout(() => {
           if (this.socket) {
@@ -104,21 +105,21 @@ export class WebSocketService extends EventEmitter {
           }
           reject(new Error('WebSocket connection timeout'));
         }, this.timeout);
-        
+
         // Clear timeout when connected
         this.socket.once('connect', () => clearTimeout(timeout));
       });
-      
+
       // Process any queued messages
       this.processMessageQueue();
-      
+
       logger.info('Connected to WebSocket server');
     } catch (error) {
       logger.error('Failed to connect to WebSocket server:', error);
       throw error;
     }
   }
-  
+
   /**
    * Disconnect from the WebSocket server
    */
@@ -126,17 +127,17 @@ export class WebSocketService extends EventEmitter {
     if (this.socket) {
       // Clean up event listeners
       this.socket.offAny();
-      
+
       // Close the connection
       this.socket.disconnect();
       this.socket = null;
       this.connected = false;
       this.reconnecting = false;
-      
+
       logger.info('Disconnected from WebSocket server');
     }
   }
-  
+
   /**
    * Set up WebSocket event handlers
    */
@@ -144,89 +145,89 @@ export class WebSocketService extends EventEmitter {
     if (!this.socket) {
       return;
     }
-    
+
     // Connection events
     this.socket.on('connect', () => {
       this.connected = true;
       this.reconnecting = false;
       this.emit('connected');
       logger.debug('WebSocket connected');
-      
+
       // Process any queued messages
       this.processMessageQueue();
     });
-    
+
     this.socket.on('disconnect', (reason) => {
       this.connected = false;
       this.emit('disconnected', reason);
       logger.debug(`WebSocket disconnected: ${reason}`);
     });
-    
+
     this.socket.on('connect_error', (error) => {
       logger.error('WebSocket connection error:', error);
       this.emit('error', error);
     });
-    
+
     this.socket.on('reconnect_attempt', (attempt) => {
       this.reconnecting = true;
       logger.debug(`WebSocket reconnection attempt ${attempt}`);
       this.emit('reconnecting', attempt);
     });
-    
+
     this.socket.on('reconnect', (attempt) => {
       this.connected = true;
       this.reconnecting = false;
       logger.debug(`WebSocket reconnected after ${attempt} attempts`);
       this.emit('reconnected', attempt);
     });
-    
+
     this.socket.on('reconnect_failed', () => {
       this.reconnecting = false;
       logger.error('WebSocket reconnection failed');
       this.emit('reconnect_failed');
     });
-    
+
     // Server messages
     this.socket.on('message', (data) => {
       logger.debug('WebSocket message received:', data);
       this.emit('message', data);
     });
-    
+
     // Project update events
     this.socket.on('project:update', (data) => {
       logger.debug('Project update received:', data);
       this.emit('project:update', data);
     });
-    
+
     // File events
     this.socket.on('file:created', (data) => {
       logger.debug('File created event:', data);
       this.emit('file:created', data);
     });
-    
+
     this.socket.on('file:updated', (data) => {
       logger.debug('File updated event:', data);
       this.emit('file:updated', data);
     });
-    
+
     this.socket.on('file:deleted', (data) => {
       logger.debug('File deleted event:', data);
       this.emit('file:deleted', data);
     });
-    
+
     // Notification events
     this.socket.on('notification', (data) => {
       logger.debug('Notification received:', data);
       this.emit('notification', data);
     });
-    
+
     // Error events
     this.socket.on('error', (error) => {
       logger.error('WebSocket error:', error);
       this.emit('error', error);
     });
   }
-  
+
   /**
    * Send a message to the server
    * @param event Event name
@@ -238,7 +239,7 @@ export class WebSocketService extends EventEmitter {
       // Queue message if not connected
       this.messageQueue.push({ event, data });
       logger.debug(`Message queued (${event}):`, data);
-      
+
       if (!this.socket && !this.reconnecting) {
         // Try to reconnect if not already reconnecting
         try {
@@ -247,16 +248,16 @@ export class WebSocketService extends EventEmitter {
           logger.error('Failed to reconnect when sending message:', error);
         }
       }
-      
+
       return;
     }
-    
+
     return new Promise<void>((resolve, reject) => {
       if (!this.socket) {
         reject(new Error('Socket is not initialized'));
         return;
       }
-      
+
       this.socket.emit(event, data, (error: any, response: any) => {
         if (error) {
           logger.error(`Error sending message (${event}):`, error);
@@ -268,7 +269,7 @@ export class WebSocketService extends EventEmitter {
       });
     });
   }
-  
+
   /**
    * Process queued messages
    */
@@ -276,13 +277,13 @@ export class WebSocketService extends EventEmitter {
     if (!this.connected || !this.socket || this.messageQueue.length === 0) {
       return;
     }
-    
+
     logger.debug(`Processing ${this.messageQueue.length} queued messages`);
-    
+
     // Take a copy of the queue and clear it
     const queue = [...this.messageQueue];
     this.messageQueue = [];
-    
+
     // Process each message
     for (const { event, data } of queue) {
       try {
@@ -294,7 +295,7 @@ export class WebSocketService extends EventEmitter {
       }
     }
   }
-  
+
   /**
    * Subscribe to project updates
    * @param projectId Project ID
@@ -305,11 +306,11 @@ export class WebSocketService extends EventEmitter {
     if (!this.connected || this.projectId !== projectId) {
       await this.connect(projectId);
     }
-    
+
     await this.sendMessage('subscribe:project', { projectId });
     logger.debug(`Subscribed to project ${projectId} updates`);
   }
-  
+
   /**
    * Unsubscribe from project updates
    * @param projectId Project ID
@@ -319,11 +320,11 @@ export class WebSocketService extends EventEmitter {
     if (!this.connected) {
       return;
     }
-    
+
     await this.sendMessage('unsubscribe:project', { projectId });
     logger.debug(`Unsubscribed from project ${projectId} updates`);
   }
-  
+
   /**
    * Notify about local file changes
    * @param projectId Project ID
@@ -331,12 +332,16 @@ export class WebSocketService extends EventEmitter {
    * @param operation Operation type (create, update, delete)
    * @returns Promise resolving when notification is sent
    */
-  async notifyFileChange(projectId: string, filePath: string, operation: 'create' | 'update' | 'delete'): Promise<void> {
+  async notifyFileChange(
+    projectId: string,
+    filePath: string,
+    operation: 'create' | 'update' | 'delete',
+  ): Promise<void> {
     // Connect if not already connected
     if (!this.connected || this.projectId !== projectId) {
       await this.connect(projectId);
     }
-    
+
     await this.sendMessage('file:change', {
       projectId,
       path: filePath,
@@ -344,10 +349,10 @@ export class WebSocketService extends EventEmitter {
       source: 'client',
       timestamp: Date.now(),
     });
-    
+
     logger.debug(`Notified ${operation} operation on ${filePath}`);
   }
-  
+
   /**
    * Request sync status
    * @param projectId Project ID
@@ -358,13 +363,13 @@ export class WebSocketService extends EventEmitter {
     if (!this.connected || this.projectId !== projectId) {
       await this.connect(projectId);
     }
-    
+
     return new Promise<any>((resolve, reject) => {
       if (!this.socket) {
         reject(new Error('Socket is not initialized'));
         return;
       }
-      
+
       this.socket.emit('sync:status', { projectId }, (error: any, status: any) => {
         if (error) {
           logger.error('Error requesting sync status:', error);
@@ -376,7 +381,7 @@ export class WebSocketService extends EventEmitter {
       });
     });
   }
-  
+
   /**
    * Request immediate sync
    * @param projectId Project ID
@@ -387,11 +392,11 @@ export class WebSocketService extends EventEmitter {
     if (!this.connected || this.projectId !== projectId) {
       await this.connect(projectId);
     }
-    
+
     await this.sendMessage('sync:request', { projectId });
     logger.debug(`Requested sync for project ${projectId}`);
   }
-  
+
   /**
    * Check if connected to WebSocket server
    * @returns Connection status
@@ -399,7 +404,7 @@ export class WebSocketService extends EventEmitter {
   isConnected(): boolean {
     return this.connected;
   }
-  
+
   /**
    * Check if reconnecting to WebSocket server
    * @returns Reconnection status
@@ -407,7 +412,7 @@ export class WebSocketService extends EventEmitter {
   isReconnecting(): boolean {
     return this.reconnecting;
   }
-  
+
   /**
    * Get the current project ID
    * @returns Project ID or undefined

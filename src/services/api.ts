@@ -1,7 +1,7 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
-import { getConfig } from "../utils/config";
-import { logger } from "../utils/logger";
-import { AuthService } from "./auth";
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { getConfig } from '../utils/config';
+import { logger } from '../utils/logger';
+import { AuthService } from './auth';
 
 // Interfaces
 export interface ProjectInfo {
@@ -74,9 +74,9 @@ export class ApiService {
       baseURL: options?.apiEndpoint || config.apiEndpoint,
       timeout: options?.timeout || config.timeout || 30000,
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "User-Agent": `carver-cli/${config.version || "1.0.0"}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'User-Agent': `carver-cli/${config.version || '1.0.0'}`,
       },
     });
 
@@ -90,8 +90,8 @@ export class ApiService {
         ...authHeaders,
       } as typeof request.headers;
 
-      const method = request.method?.toUpperCase() || "UNKNOWN";
-      const url = request.url || "UNKNOWN";
+      const method = request.method?.toUpperCase() || 'UNKNOWN';
+      const url = request.url || 'UNKNOWN';
       logger.debug(`API Request: ${method} ${url}`);
       return request;
     });
@@ -108,18 +108,18 @@ export class ApiService {
       async (error) => {
         if (error.response) {
           logger.error(`API Error: ${error.response.status} ${error.response.statusText}`);
-          logger.debug("API Error Details:", error.response.data);
+          logger.debug('API Error Details:', error.response.data);
 
           // Handle specific status codes
           if (error.response.status === 401 || error.response.status === 403) {
             // Authentication error - token may have expired
-            logger.debug("Authentication error detected, attemping to refresh token");
+            logger.debug('Authentication error detected, attemping to refresh token');
             // This will be handled by the retry mechanism
           }
 
           if (error.response.status === 429) {
             // Rate limiting - adjust retry delay
-            const retryAfter = error.response.headers["retry-after"];
+            const retryAfter = error.response.headers['retry-after'];
             if (retryAfter) {
               const retryDelay = parseInt(retryAfter, 10) * 1000;
               error.retryDelay = retryDelay;
@@ -130,12 +130,12 @@ export class ApiService {
           // Update circuit breaker status
           this.updateCircuitBreakerStatus(error);
         } else if (error.request) {
-          logger.error("API Error: No response received");
+          logger.error('API Error: No response received');
           // Network error - we might be offline
           this.isOnline = false;
           error.isNetworkError = true;
         } else {
-          logger.error("API Error:", error.message);
+          logger.error('API Error:', error.message);
         }
 
         return Promise.reject(error);
@@ -157,11 +157,11 @@ export class ApiService {
     // Open the circuit if too many failures occur
     if (this.failureCount >= 5 && !this.circuitOpen) {
       this.circuitOpen = true;
-      logger.warn("Circuit breaker opened due to multiple API failures");
+      logger.warn('Circuit breaker opened due to multiple API failures');
 
       // Auto-reset circuit after 30 seconds
       setTimeout(() => {
-        logger.info("Circuit breaker reset, attempting to resume normal operations");
+        logger.info('Circuit breaker reset, attempting to resume normal operations');
         this.circuitOpen = false;
         this.failureCount = 0;
       }, 30000);
@@ -175,11 +175,11 @@ export class ApiService {
     setInterval(async () => {
       if (!this.isOnline) {
         try {
-          const response = await fetch(this.client.defaults.baseURL + "/healthcheck");
+          const response = await fetch(this.client.defaults.baseURL + '/healthcheck');
           this.isOnline = response.ok;
 
           if (this.isOnline) {
-            logger.info("Network connection restored, processing queued requests");
+            logger.info('Network connection restored, processing queued requests');
             this.processRequestQueue();
           }
         } catch (error) {
@@ -198,7 +198,7 @@ export class ApiService {
    */
   private async executeRequest<T>(config: AxiosRequestConfig, priority = 1): Promise<T> {
     // Check cache for GET requests
-    if (config.method?.toLowerCase() === "get" && config.url) {
+    if (config.method?.toLowerCase() === 'get' && config.url) {
       const cacheKey = `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
       const cachedItem = this.cache.get(cacheKey);
 
@@ -229,7 +229,7 @@ export class ApiService {
         const response = await this.client.request<T>(config);
 
         // Cache GET responses
-        if (config.method?.toLowerCase() === "get" && config.url) {
+        if (config.method?.toLowerCase() === 'get' && config.url) {
           const cacheKey = `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
           this.cache.set(cacheKey, {
             data: response.data,
@@ -260,7 +260,7 @@ export class ApiService {
               await this.authService.refreshAccessToken();
               // Continue to retry after token refresh
             } catch (refreshError) {
-              logger.error("Failed to refresh token:", refreshError);
+              logger.error('Failed to refresh token:', refreshError);
               throw error; // If refresh fails, don't retry
             }
           }
@@ -300,7 +300,7 @@ export class ApiService {
     }
 
     // This should never be reached due to the loop above
-    throw new Error("Request failed after maximum retries");
+    throw new Error('Request failed after maximum retries');
   }
 
   /**
@@ -372,7 +372,7 @@ export class ApiService {
    */
   clearCache(): void {
     this.cache.clear();
-    logger.debug("API cache cleared");
+    logger.debug('API cache cleared');
   }
 
   /**
@@ -383,8 +383,8 @@ export class ApiService {
     try {
       const response = await this.executeRequest<any>(
         {
-          method: "get",
-          url: "/auth/verify",
+          method: 'get',
+          url: '/auth/verify',
         },
         10,
       ); // High priority
@@ -402,7 +402,7 @@ export class ApiService {
    */
   async getProject(projectId: string): Promise<ProjectInfo> {
     return this.executeRequest<ProjectInfo>({
-      method: "get",
+      method: 'get',
       url: `/projects/${projectId}`,
     });
   }
@@ -414,7 +414,7 @@ export class ApiService {
    */
   async getProjectStatus(projectId: string): Promise<any> {
     return this.executeRequest<any>({
-      method: "get",
+      method: 'get',
       url: `/projects/${projectId}/status`,
     });
   }
@@ -425,8 +425,8 @@ export class ApiService {
    */
   async listProjects(): Promise<ProjectInfo[]> {
     const response = await this.executeRequest<{ projects: ProjectInfo[] }>({
-      method: "get",
-      url: "/projects",
+      method: 'get',
+      url: '/projects',
     });
 
     return response.projects || [];
@@ -440,8 +440,8 @@ export class ApiService {
   async createProject(params: { name: string; description?: string }): Promise<ProjectInfo> {
     return this.executeRequest<ProjectInfo>(
       {
-        method: "post",
-        url: "/projects",
+        method: 'post',
+        url: '/projects',
         data: params,
       },
       5,
@@ -462,7 +462,7 @@ export class ApiService {
     },
   ): Promise<ProjectInfo> {
     return this.executeRequest<ProjectInfo>({
-      method: "put",
+      method: 'put',
       url: `/projects/${projectId}`,
       data: params,
     });
@@ -477,7 +477,7 @@ export class ApiService {
     try {
       await this.executeRequest<any>(
         {
-          method: "delete",
+          method: 'delete',
           url: `/projects/${projectId}`,
         },
         5,
@@ -498,17 +498,17 @@ export class ApiService {
    */
   async updateFile(projectId: string, filePath: string, content: string | Buffer): Promise<any> {
     // Convert Buffer to base64 string if needed
-    const contentValue = Buffer.isBuffer(content) ? content.toString("base64") : content;
+    const contentValue = Buffer.isBuffer(content) ? content.toString('base64') : content;
     const isBase64 = Buffer.isBuffer(content);
 
     return this.executeRequest<any>(
       {
-        method: "post",
+        method: 'post',
         url: `/projects/${projectId}/files`,
         data: {
           path: filePath,
           content: contentValue,
-          encoding: isBase64 ? "base64" : "utf8",
+          encoding: isBase64 ? 'base64' : 'utf8',
         },
       },
       3,
@@ -530,21 +530,21 @@ export class ApiService {
       if (Buffer.isBuffer(file.content)) {
         return {
           path: file.path,
-          content: file.content.toString("base64"),
-          encoding: "base64",
+          content: file.content.toString('base64'),
+          encoding: 'base64',
         };
       } else {
         return {
           path: file.path,
           content: file.content,
-          encoding: "utf8",
+          encoding: 'utf8',
         };
       }
     });
 
     return this.executeRequest<any>(
       {
-        method: "post",
+        method: 'post',
         url: `/projects/${projectId}/files/batch`,
         data: {
           files: processedFiles,
@@ -562,7 +562,7 @@ export class ApiService {
    */
   async getFile(projectId: string, filePath: string): Promise<string> {
     const response = await this.executeRequest<{ content: string }>({
-      method: "get",
+      method: 'get',
       url: `/projects/${projectId}/files`,
       params: { path: filePath },
     });
@@ -578,7 +578,7 @@ export class ApiService {
    */
   async deleteFile(projectId: string, filePath: string): Promise<any> {
     return this.executeRequest<any>({
-      method: "delete",
+      method: 'delete',
       url: `/projects/${projectId}/files`,
       data: {
         path: filePath,
@@ -594,7 +594,7 @@ export class ApiService {
    */
   async listFiles(projectId: string, directory?: string): Promise<FileStats[]> {
     const response = await this.executeRequest<{ files: FileStats[] }>({
-      method: "get",
+      method: 'get',
       url: `/projects/${projectId}/files/list`,
       params: directory ? { directory } : {},
     });
@@ -615,7 +615,7 @@ export class ApiService {
   }): Promise<string> {
     const response = await this.executeRequest<{ prompt: string }>(
       {
-        method: "post",
+        method: 'post',
         url: `/projects/${params.projectId}/prompt`,
         data: params,
       },
@@ -632,7 +632,7 @@ export class ApiService {
    */
   async getTemplates(projectId: string): Promise<string[]> {
     const response = await this.executeRequest<{ templates: string[] }>({
-      method: "get",
+      method: 'get',
       url: `/projects/${projectId}/templates`,
     });
 
@@ -647,7 +647,7 @@ export class ApiService {
   async syncProject(projectId: string): Promise<any> {
     return this.executeRequest<any>(
       {
-        method: "post",
+        method: 'post',
         url: `/projects/${projectId}/sync`,
       },
       5,
@@ -661,7 +661,7 @@ export class ApiService {
    */
   async getProjectStats(projectId: string): Promise<any> {
     return this.executeRequest<any>({
-      method: "get",
+      method: 'get',
       url: `/projects/${projectId}/stats`,
     });
   }
@@ -678,7 +678,7 @@ export class ApiService {
     // For now, we'll use a simplified version
     return this.executeRequest<any>(
       {
-        method: "post",
+        method: 'post',
         url: `/projects/${projectId}/files/upload`,
         data: {
           path: remotePath,
@@ -699,13 +699,13 @@ export class ApiService {
   async downloadFile(projectId: string, remotePath: string, localPath: string): Promise<any> {
     return this.executeRequest<any>(
       {
-        method: "get",
+        method: 'get',
         url: `/projects/${projectId}/files/download`,
         params: {
           path: remotePath,
           localPath: localPath,
         },
-        responseType: "stream",
+        responseType: 'stream',
       },
       4,
     ); // Higher priority
@@ -722,12 +722,12 @@ export class ApiService {
   }> {
     try {
       const config = getConfig();
-      const clientVersion = config.version || "1.0.0";
+      const clientVersion = config.version || '1.0.0';
 
       const response = await this.executeRequest<any>(
         {
-          method: "get",
-          url: "/compatibility",
+          method: 'get',
+          url: '/compatibility',
           params: {
             clientVersion,
           },
@@ -737,15 +737,15 @@ export class ApiService {
 
       return {
         compatible: response.compatible || false,
-        minVersion: response.minVersion || "0.0.0",
-        maxVersion: response.maxVersion || "999.999.999",
+        minVersion: response.minVersion || '0.0.0',
+        maxVersion: response.maxVersion || '999.999.999',
       };
     } catch (error) {
       // Default to compatible on error
       return {
         compatible: true,
-        minVersion: "0.0.0",
-        maxVersion: "999.999.999",
+        minVersion: '0.0.0',
+        maxVersion: '999.999.999',
       };
     }
   }
@@ -758,8 +758,8 @@ export class ApiService {
     try {
       const response = await this.executeRequest<any>(
         {
-          method: "get",
-          url: "/healthcheck",
+          method: 'get',
+          url: '/healthcheck',
         },
         10,
       ); // Highest priority

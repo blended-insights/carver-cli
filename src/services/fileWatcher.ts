@@ -6,7 +6,12 @@ import { logger } from '../utils/logger';
 import { getConfig } from '../utils/config';
 import { EventEmitter } from 'events';
 import { getFileHash, isBinaryFile, processFile } from '../utils/hash';
-import { FileChange, FileWatcherOptions, FileWatcherStatus, IFileWatcher } from '../types/fileWatcher';
+import {
+  FileChange,
+  FileWatcherOptions,
+  FileWatcherStatus,
+  IFileWatcher,
+} from '../types/fileWatcher';
 import { getIgnorePatterns, IgnoreOptions } from '../utils/gitignore';
 
 /**
@@ -26,7 +31,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
   private fileCache: Map<string, string> = new Map(); // Path to hash cache
   private paused: boolean = false;
   private tmpDir: string;
-  
+
   /**
    * Create a new file watcher
    * @param projectRoot Root directory of the project to watch
@@ -35,32 +40,32 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
   constructor(projectRoot: string, options?: FileWatcherOptions) {
     super();
     this.projectRoot = projectRoot;
-    
-  // Set options from parameters if provided
+
+    // Set options from parameters if provided
     if (options) {
       if (options.debounceDelay) this.debounceDelay = options.debounceDelay;
       if (options.batchInterval) this.batchInterval = options.batchInterval;
     }
-    
+
     // Get ignore patterns from config
     const config = getConfig();
     this.ignorePatterns = config.ignorePatterns || [];
-    
+
     // Add additional ignore patterns from options
     if (options?.ignorePatterns) {
       this.ignorePatterns = [...this.ignorePatterns, ...options.ignorePatterns];
     }
-    
+
     // Initialize temporary directory for file operations
     this.tmpDir = path.join(os.homedir(), '.carver', 'tmp');
     if (!fs.existsSync(this.tmpDir)) {
       fs.mkdirSync(this.tmpDir, { recursive: true });
     }
-    
+
     // Load project-specific ignore patterns
     this.loadIgnorePatterns(options);
   }
-  
+
   /**
    * Start watching for file changes
    * @returns Promise that resolves when watcher is ready
@@ -70,13 +75,13 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       logger.warn('File watcher already started');
       return Promise.resolve();
     }
-    
+
     // Reset paused state when starting
     this.paused = false;
-    
+
     logger.info(`Starting file watcher in ${this.projectRoot}`);
     logger.debug(`Ignoring patterns: ${this.ignorePatterns.join(', ')}`);
-    
+
     // Initialize chokidar watcher
     this.watcher = chokidar.watch(this.projectRoot, {
       ignoreInitial: true,
@@ -89,7 +94,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       },
       alwaysStat: true, // Get file stats for better change detection
     });
-    
+
     // Set up event handlers
     this.watcher
       .on('add', (filePath) => this.handleFileChange(filePath, 'add'))
@@ -99,14 +104,14 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
         logger.error('File watcher error:', error);
         this.emit('error', error);
       });
-    
+
     // Return a promise that resolves when the watcher is ready
     return new Promise((resolve) => {
       if (!this.watcher) {
         resolve();
         return;
       }
-      
+
       this.watcher.on('ready', () => {
         this.isWatching = true;
         logger.info('File watcher ready');
@@ -115,7 +120,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       });
     });
   }
-  
+
   /**
    * Stop watching for file changes
    * @returns Promise that resolves when watcher is closed
@@ -125,23 +130,23 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       logger.debug('File watcher not running');
       return Promise.resolve();
     }
-    
+
     logger.info('Stopping file watcher');
-    
+
     // Clear any pending timers
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
       this.debounceTimer = null;
     }
-    
+
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
       this.batchTimer = null;
     }
-    
+
     // Process any remaining queued changes
     this.processQueue();
-    
+
     // Close the watcher
     return this.watcher.close().then(() => {
       this.isWatching = false;
@@ -152,7 +157,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       this.fileCache.clear();
     });
   }
-  
+
   /**
    * Handle file change event
    * @param filePath Path to changed file
@@ -163,31 +168,31 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
     if (this.paused) {
       return;
     }
-    
+
     // Convert to relative path
     const relativePath = path.relative(this.projectRoot, filePath);
-    
+
     logger.debug(`File ${type}: ${relativePath}`);
-    
+
     // Create change object
     const change: FileChange = {
       path: relativePath,
       type,
     };
-    
+
     // For delete operations, remove from hash cache
     if (type === 'unlink') {
       this.fileCache.delete(relativePath);
     }
-    
+
     // Add to queue (we'll process content at queue processing time)
     this.queue.set(relativePath, change);
-    
+
     // Debounce processing
     if (this.debounceTimer) {
       clearTimeout(this.debounceTimer);
     }
-    
+
     this.debounceTimer = setTimeout(() => {
       // If batcher isn't running, start it
       if (!this.batchTimer) {
@@ -196,7 +201,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       this.debounceTimer = null;
     }, this.debounceDelay);
   }
-  
+
   /**
    * Process queued file changes
    */
@@ -204,13 +209,13 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
     if (this.queue.size === 0) {
       return;
     }
-    
+
     logger.debug(`Processing ${this.queue.size} file changes`);
-    
+
     // Process each change
     const changes: FileChange[] = [];
     const pendingProcesses: Promise<void>[] = [];
-    
+
     for (const [relativePath, change] of this.queue.entries()) {
       // For add/change, process file content
       if (change.type === 'add' || change.type === 'change') {
@@ -221,31 +226,35 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
         changes.push(change);
       }
     }
-    
+
     // Wait for all file processing to complete
     await Promise.all(pendingProcesses);
-    
+
     // Gather all changes (including processed ones)
     for (const [relativePath, change] of this.queue.entries()) {
       if (change.type === 'add' || change.type === 'change') {
         // Skip files that haven't changed (based on hash)
-        if (change.hash && this.fileCache.has(relativePath) && this.fileCache.get(relativePath) === change.hash) {
+        if (
+          change.hash &&
+          this.fileCache.has(relativePath) &&
+          this.fileCache.get(relativePath) === change.hash
+        ) {
           logger.debug(`Skipping unchanged file: ${relativePath}`);
           continue;
         }
-        
+
         // Update cache with new hash
         if (change.hash) {
           this.fileCache.set(relativePath, change.hash);
         }
       }
-      
+
       changes.push(change);
     }
-    
+
     // Clear queue
     this.queue.clear();
-    
+
     // Emit changes
     if (changes.length > 0) {
       this.emit('changes', changes);
@@ -253,7 +262,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       logger.debug('No actual changes detected after filtering');
     }
   }
-  
+
   /**
    * Load ignore patterns from gitignore and carverignore files
    * @param options File watcher options
@@ -266,23 +275,23 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
         useCarverignore: options?.useCarverignore !== false, // Default to true
         additionalPatterns: options?.ignorePatterns || [],
       };
-      
+
       // Get ignore patterns
       const patterns = await getIgnorePatterns(this.projectRoot, ignoreOptions);
-      
+
       // Add to existing patterns (if not already present)
       for (const pattern of patterns) {
         if (!this.ignorePatterns.includes(pattern)) {
           this.ignorePatterns.push(pattern);
         }
       }
-      
+
       logger.debug(`Loaded ${patterns.length} ignore patterns`);
     } catch (error) {
       logger.warn('Failed to load ignore patterns:', error);
     }
   }
-  
+
   /**
    * Add a pattern to ignore
    * @param pattern Pattern to ignore
@@ -290,14 +299,14 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
   addIgnorePattern(pattern: string): void {
     if (!this.ignorePatterns.includes(pattern)) {
       this.ignorePatterns.push(pattern);
-      
+
       // Update watcher if running
       if (this.watcher) {
         this.watcher.unwatch(pattern);
       }
     }
   }
-  
+
   /**
    * Start batching timer for processing changes
    */
@@ -305,33 +314,33 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
     if (this.batchTimer) {
       clearTimeout(this.batchTimer);
     }
-    
+
     this.batchTimer = setTimeout(async () => {
       await this.processQueue();
       this.batchTimer = null;
-      
+
       // If queue is not empty after processing, start another batch timer
       if (this.queue.size > 0) {
         this.startBatcher();
       }
     }, this.batchInterval);
   }
-  
+
   /**
    * Process a file change by reading content and calculating hash
    */
   private async processFileChange(relativePath: string, change: FileChange): Promise<void> {
     try {
       const filePath = path.join(this.projectRoot, relativePath);
-      
+
       // Skip if file doesn't exist anymore
       if (!fs.existsSync(filePath)) {
         return;
       }
-      
+
       // Process file (read content and calculate hash)
       const { content, hash, isBinary } = await processFile(filePath);
-      
+
       // Update change object with file info
       change.content = content;
       change.hash = hash;
@@ -340,7 +349,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       logger.error(`Error processing file ${relativePath}:`, error);
     }
   }
-  
+
   /**
    * Pause the watcher (stop processing changes temporarily)
    */
@@ -349,17 +358,17 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       logger.warn('Cannot pause: watcher is not running');
       return;
     }
-    
+
     if (this.paused) {
       logger.debug('Watcher is already paused');
       return;
     }
-    
+
     this.paused = true;
     logger.info('Watcher paused');
     this.emit('paused');
   }
-  
+
   /**
    * Resume the watcher
    */
@@ -368,17 +377,17 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
       logger.warn('Cannot resume: watcher is not running');
       return;
     }
-    
+
     if (!this.paused) {
       logger.debug('Watcher is not paused');
       return;
     }
-    
+
     this.paused = false;
     logger.info('Watcher resumed');
     this.emit('resumed');
   }
-  
+
   /**
    * Check if currently watching
    * @returns True if watching
@@ -386,7 +395,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
   isActive(): boolean {
     return this.isWatching;
   }
-  
+
   /**
    * Check if currently paused
    * @returns True if paused
@@ -394,7 +403,7 @@ export class FileWatcher extends EventEmitter implements IFileWatcher {
   isPaused(): boolean {
     return this.paused;
   }
-  
+
   /**
    * Get current status
    * @returns Status object

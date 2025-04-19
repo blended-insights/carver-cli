@@ -1,9 +1,9 @@
 /* eslint-disable camelcase */
 
-import axios, { AxiosInstance } from "axios";
-import { getConfig } from "../utils/config";
-import { logger } from "../utils/logger";
-import { CredentialService } from "./credentialService";
+import axios, { AxiosInstance } from 'axios';
+import { getConfig } from '../utils/config';
+import { logger } from '../utils/logger';
+import { CredentialService } from './credentialService';
 
 export interface AuthTokens {
   accessToken: string;
@@ -36,9 +36,9 @@ export class AuthService {
       baseURL: options?.apiEndpoint || config.apiEndpoint,
       timeout: options?.timeout || config.timeout || 30000,
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        "User-Agent": `carver-cli/${config.version || "1.0.0"}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'User-Agent': `carver-cli/${config.version || '1.0.0'}`,
       },
     });
 
@@ -48,11 +48,11 @@ export class AuthService {
       (error) => {
         if (error.response) {
           logger.error(`Auth Error: ${error.response.status} ${error.response.statusText}`);
-          logger.debug("Auth Error Details:", error.response.data);
+          logger.debug('Auth Error Details:', error.response.data);
         } else if (error.request) {
-          logger.error("Auth Error: No response received");
+          logger.error('Auth Error: No response received');
         } else {
-          logger.error("Auth Error:", error.message);
+          logger.error('Auth Error:', error.message);
         }
 
         return Promise.reject(error);
@@ -67,9 +67,9 @@ export class AuthService {
    */
   async authenticateWithApiKey(apiKey: string): Promise<boolean> {
     try {
-      const response = await this.client.post("/auth/token", {
+      const response = await this.client.post('/auth/token', {
         apiKey,
-        grant_type: "api_key",
+        grant_type: 'api_key',
       });
 
       if (response.status === 200 && response.data.accessToken) {
@@ -83,15 +83,15 @@ export class AuthService {
         // Store API key securely
         await this.credentialService.storeApiKey(apiKey);
 
-        logger.debug("Authentication successful");
+        logger.debug('Authentication successful');
         return true;
       }
 
-      logger.error("Authentication failed: Invalid response format");
+      logger.error('Authentication failed: Invalid response format');
       return false;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("Authentication failed:", errorMessage);
+      logger.error('Authentication failed:', errorMessage);
       return false;
     }
   }
@@ -111,11 +111,11 @@ export class AuthService {
       // 3. Exchanging the signature for tokens
 
       // For now, as a placeholder:
-      logger.error("PKEY authentication not yet implemented");
+      logger.error('PKEY authentication not yet implemented');
       return false;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error("PKEY authentication failed:", errorMessage);
+      logger.error('PKEY authentication failed:', errorMessage);
       return false;
     }
   }
@@ -131,10 +131,10 @@ export class AuthService {
       if (apiKey) {
         const success = await this.authenticateWithApiKey(apiKey);
         if (!success) {
-          throw new Error("Failed to authenticate with stored API key");
+          throw new Error('Failed to authenticate with stored API key');
         }
       } else {
-        throw new Error("No authentication credentials available");
+        throw new Error('No authentication credentials available');
       }
     }
 
@@ -161,12 +161,12 @@ export class AuthService {
     this.refreshPromise = (async () => {
       try {
         if (!this.tokens || !this.tokens.refreshToken) {
-          throw new Error("No refresh token available");
+          throw new Error('No refresh token available');
         }
 
-        const response = await this.client.post("/auth/token", {
+        const response = await this.client.post('/auth/token', {
           refresh_token: this.tokens.refreshToken,
-          grant_type: "refresh_token",
+          grant_type: 'refresh_token',
         });
 
         if (response.status === 200 && response.data.accessToken) {
@@ -176,19 +176,19 @@ export class AuthService {
             expiresAt: Date.now() + response.data.expiresIn * 1000,
           };
 
-          logger.debug("Token refreshed successfully");
+          logger.debug('Token refreshed successfully');
           return this.tokens;
         }
 
-        throw new Error("Invalid response from token refresh endpoint");
+        throw new Error('Invalid response from token refresh endpoint');
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        logger.error("Failed to refresh token:", errorMessage);
+        logger.error('Failed to refresh token:', errorMessage);
 
         // Clear tokens to force a full re-authentication on next request
         this.tokens = null;
 
-        throw new Error("Failed to refresh access token");
+        throw new Error('Failed to refresh access token');
       } finally {
         // Clear the refresh promise
         this.refreshPromise = null;
@@ -208,7 +208,7 @@ export class AuthService {
     // Clear stored API key
     await this.credentialService.deleteApiKey();
 
-    logger.debug("Logged out successfully");
+    logger.debug('Logged out successfully');
   }
 
   /**

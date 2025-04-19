@@ -28,11 +28,13 @@ By participating in this project, you agree to abide by our Code of Conduct. We 
 ### Development Environment Setup
 
 1. **Prerequisites**
+
    - Node.js (v16 or higher)
    - npm (v7 or higher)
    - Git
 
 2. **Installation**
+
    ```bash
    # Clone the repository
    git clone https://github.com/blended-insights/carver-cli.git
@@ -57,6 +59,7 @@ By participating in this project, you agree to abide by our Code of Conduct. We 
 ### Project Structure
 
 The project follows this structure:
+
 ```
 carver-cli/
 ├── bin/                    # Executable entry points
@@ -99,6 +102,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/) for our comm
 ```
 
 Types include:
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation changes
@@ -109,6 +113,7 @@ Types include:
 - `chore`: Changes to the build process, tooling, etc.
 
 Example:
+
 ```
 feat(watch): add support for custom ignore patterns
 

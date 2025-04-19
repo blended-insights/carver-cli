@@ -8,14 +8,7 @@ const defaultConfig = {
   apiEndpoint: 'https://api.carver.ai',
   timeout: 30000,
   maxWatchPaths: 1000,
-  ignorePatterns: [
-    'node_modules/**',
-    '.git/**',
-    'dist/**',
-    'build/**',
-    '**/*.log',
-    '.carver/**',
-  ],
+  ignorePatterns: ['node_modules/**', '.git/**', 'dist/**', 'build/**', '**/*.log', '.carver/**'],
 };
 
 // Global config
@@ -28,7 +21,7 @@ let globalConfig: any = { ...defaultConfig };
 export function loadConfig(customConfigPath?: string): void {
   try {
     let configPath: string;
-    
+
     if (customConfigPath) {
       // Use custom config path if provided
       configPath = path.resolve(customConfigPath);
@@ -39,17 +32,17 @@ export function loadConfig(customConfigPath?: string): void {
       configPath = path.join(homeDir!, '.carver', 'config.json');
       logger.debug(`Using default config path: ${configPath}`);
     }
-    
+
     if (fs.existsSync(configPath)) {
       const configData = fs.readFileSync(configPath, 'utf-8');
       const userConfig = JSON.parse(configData);
-      
+
       // Merge with default config
       globalConfig = {
         ...defaultConfig,
         ...userConfig,
       };
-      
+
       logger.debug('Loaded global configuration');
     } else {
       logger.debug('No global configuration found, using defaults');
@@ -77,7 +70,7 @@ export function updateConfig(newConfig: any, customConfigPath?: string): void {
     ...globalConfig,
     ...newConfig,
   };
-  
+
   // Determine where to save config
   let configPath: string;
   if (customConfigPath) {
@@ -86,13 +79,13 @@ export function updateConfig(newConfig: any, customConfigPath?: string): void {
     const homeDir = process.env.HOME || process.env.USERPROFILE;
     const configDir = path.join(homeDir!, '.carver');
     configPath = path.join(configDir, 'config.json');
-    
+
     // Ensure directory exists
     if (!fs.existsSync(configDir)) {
       fs.mkdirSync(configDir, { recursive: true });
     }
   }
-  
+
   try {
     // Write config file
     fs.writeFileSync(configPath, JSON.stringify(globalConfig, null, 2));
@@ -119,5 +112,5 @@ export function resetConfig(): any {
  */
 export function getConfigValue<T>(key: string, defaultValue?: T): T {
   const value = key.split('.').reduce((obj, k) => obj && obj[k], globalConfig as any);
-  return value !== undefined ? value : defaultValue as T;
+  return value !== undefined ? value : (defaultValue as T);
 }

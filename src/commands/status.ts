@@ -1,20 +1,20 @@
 /* eslint-disable no-console */
 
-import { Command } from "commander";
-import * as path from "path";
-import * as fs from "fs";
-import { logger } from "../utils/logger";
-import { ConfigService } from "../services/configService";
-import { ApiService } from "../services/api";
-import { CredentialService } from "../services/credentialService";
+import { Command } from 'commander';
+import * as path from 'path';
+import * as fs from 'fs';
+import { logger } from '../utils/logger';
+import { ConfigService } from '../services/configService';
+import { ApiService } from '../services/api';
+import { CredentialService } from '../services/credentialService';
 
 export function registerStatusCommand(program: Command): void {
   program
-    .command("status")
-    .description("Check the status of a Carver project")
-    .option("-d, --directory <path>", "Project directory", process.cwd())
-    .option("-v, --verbose", "Show detailed status information")
-    .option("--json", "Output status as JSON")
+    .command('status')
+    .description('Check the status of a Carver project')
+    .option('-d, --directory <path>', 'Project directory', process.cwd())
+    .option('-v, --verbose', 'Show detailed status information')
+    .option('--json', 'Output status as JSON')
     .action(async (options) => {
       try {
         // Normalize directory path
@@ -46,7 +46,7 @@ export function registerStatusCommand(program: Command): void {
         // Get project configuration
         const config = configService.getConfig();
         if (!config || !config.projectId) {
-          logger.error("Invalid project configuration");
+          logger.error('Invalid project configuration');
           process.exit(1);
         }
 
@@ -82,25 +82,25 @@ export function registerStatusCommand(program: Command): void {
 
           // Format last sync time
           const lastSync = config.lastSync ? new Date(config.lastSync) : null;
-          const lastSyncFormatted = lastSync ? lastSync.toLocaleString() : "Never";
+          const lastSyncFormatted = lastSync ? lastSync.toLocaleString() : 'Never';
 
           // Calculate time since last sync
-          let timeSinceSync = "Never synced";
+          let timeSinceSync = 'Never synced';
           if (lastSync) {
             const now = new Date();
             const diffMs = now.getTime() - lastSync.getTime();
             const diffMins = Math.floor(diffMs / 60000);
 
             if (diffMins < 1) {
-              timeSinceSync = "Less than a minute ago";
+              timeSinceSync = 'Less than a minute ago';
             } else if (diffMins < 60) {
-              timeSinceSync = `${diffMins} minute${diffMins === 1 ? "" : "s"} ago`;
+              timeSinceSync = `${diffMins} minute${diffMins === 1 ? '' : 's'} ago`;
             } else if (diffMins < 1440) {
               const hours = Math.floor(diffMins / 60);
-              timeSinceSync = `${hours} hour${hours === 1 ? "" : "s"} ago`;
+              timeSinceSync = `${hours} hour${hours === 1 ? '' : 's'} ago`;
             } else {
               const days = Math.floor(diffMins / 1440);
-              timeSinceSync = `${days} day${days === 1 ? "" : "s"} ago`;
+              timeSinceSync = `${days} day${days === 1 ? '' : 's'} ago`;
             }
           }
 
@@ -125,7 +125,7 @@ export function registerStatusCommand(program: Command): void {
               ),
             );
           } else {
-            logger.info("=== Carver Project Status ===");
+            logger.info('=== Carver Project Status ===');
             logger.info(`Project: ${projectInfo.name}`);
             logger.info(`Directory: ${directory}`);
             logger.info(`Project ID: ${config.projectId}`);
@@ -133,13 +133,13 @@ export function registerStatusCommand(program: Command): void {
             logger.info(`Last Sync: ${lastSyncFormatted} (${timeSinceSync})`);
 
             if (options.verbose && projectStats) {
-              logger.info("\n=== Project Statistics ===");
+              logger.info('\n=== Project Statistics ===');
               logger.info(`Files: ${projectStats.fileCount}`);
               logger.info(`Total Size: ${formatBytes(projectStats.totalSize)}`);
               logger.info(`Last Modified: ${new Date(projectStats.lastModified).toLocaleString()}`);
 
               if (projectStats.languageStats) {
-                logger.info("\n=== Language Statistics ===");
+                logger.info('\n=== Language Statistics ===');
                 Object.entries(projectStats.languageStats).forEach(([language, count]) => {
                   logger.info(`${language}: ${count} files`);
                 });
@@ -154,21 +154,21 @@ export function registerStatusCommand(program: Command): void {
                 directory,
                 project: {
                   id: config.projectId,
-                  error: "Failed to fetch project status",
+                  error: 'Failed to fetch project status',
                 },
               }),
             );
           } else {
-            logger.error("Failed to fetch project status:", error);
+            logger.error('Failed to fetch project status:', error);
             logger.info(`Project ID: ${config.projectId}`);
             logger.info(`Directory: ${directory}`);
             logger.info(
-              `Last Sync: ${config.lastSync ? new Date(config.lastSync).toLocaleString() : "Never"}`,
+              `Last Sync: ${config.lastSync ? new Date(config.lastSync).toLocaleString() : 'Never'}`,
             );
           }
         }
       } catch (error) {
-        logger.error("Status command failed:", error);
+        logger.error('Status command failed:', error);
         process.exit(1);
       }
     });
@@ -180,11 +180,11 @@ export function registerStatusCommand(program: Command): void {
  * @returns Formatted string
  */
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return "0 Bytes";
+  if (bytes === 0) return '0 Bytes';
 
   const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }

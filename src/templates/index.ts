@@ -16,7 +16,7 @@ export const templates: Record<TemplateKey, string> = {
  * @returns Template string or default template if not found
  */
 export function getTemplate(name: string): string {
-  return (name in templates ? templates[name as TemplateKey] : templates.default);
+  return name in templates ? templates[name as TemplateKey] : templates.default;
 }
 
 /**
