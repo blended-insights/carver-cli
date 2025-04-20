@@ -1,12 +1,13 @@
 import fs from 'fs';
 import { delay } from './time';
+import type { ChildProcess } from 'child_process';
 
 /**
  * Get memory usage of a process
  * @param pid Process ID
  * @returns Memory usage in bytes, or -1 if process not found
  */
-async function getProcessMemoryUsage(pid) {
+async function getProcessMemoryUsage(pid: number) {
   // Check if process exists
   try {
     process.kill(pid, 0); // Check if process exists (doesn't actually kill it)
@@ -41,7 +42,7 @@ async function getProcessMemoryUsage(pid) {
  * @param timeout Timeout in milliseconds (default: 10000)
  * @returns Promise that resolves when the process exits
  */
-function waitForProcessExit(process, timeout = 10000) {
+function waitForProcessExit(process: ChildProcess, timeout = 10000) {
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       reject(new Error('Process exit timeout'));
@@ -59,7 +60,7 @@ function waitForProcessExit(process, timeout = 10000) {
  * @param port Port number
  * @returns Promise that resolves to true if port is in use, false otherwise
  */
-async function isPortInUse(port) {
+async function isPortInUse(port: number) {
   return new Promise((resolve) => {
     const net = require('net');
     const server = net.createServer();

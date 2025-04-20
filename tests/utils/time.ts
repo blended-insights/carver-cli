@@ -39,7 +39,7 @@ async function withTimeout(promise: any, ms: number | undefined) {
  * @param args Arguments to pass to the function
  * @returns Object containing result and duration in milliseconds
  */
-async function measureTime(fn, ...args) {
+async function measureTime(fn: (...args: any[]) => unknown, ...args: any[]) {
   const start = Date.now();
   const result = await fn(...args);
   const duration = Date.now() - start;

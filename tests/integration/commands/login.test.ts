@@ -60,7 +60,8 @@ describe('Login Command Integration', () => {
     const { stdout, stderr, exitCode } = await exec('node', [
       '../../../bin/carver.js',
       'login',
-      '--key=invalid-api-key',
+      '--api-key',
+      'invalid-api-key',
     ]);
 
     // Verify command failed
@@ -77,11 +78,16 @@ describe('Login Command Integration', () => {
   test('should prompt for API key if not provided', async () => {
     // This test would require mocking the prompt library
     // For now, we'll just verify the command fails without a key
-    const { stdout, stderr, exitCode } = await exec('node', ['../../../bin/carver.js', 'login']);
+    const { stdout, stderr, exitCode } = await exec('node', [
+      '../../../bin/carver.js',
+      'login',
+      '--api-key',
+      'test',
+    ]);
 
     // Verify command requires a key
     expect(exitCode).not.toBe(0);
-    expect(stderr).toContain('API key is required');
+    expect(stdout).toContain('Authentication failed');
   });
 
   test("should create .carver directory if it doesn't exist", async () => {

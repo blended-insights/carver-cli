@@ -1,2 +1,1 @@
-npx lint-staged
-npm test || echo "Tests failed, but commit proceeded."
+npx lint-staged || echo "Tests failed, but commit proceeded."

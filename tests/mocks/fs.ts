@@ -58,7 +58,7 @@ interface MockProjectOptions {
  * @param dir Base directory for the project
  * @param options Project options
  */
-function createMockProject(dir, options: MockProjectOptions = {}) {
+function createMockProject(dir: string, options: MockProjectOptions = {}) {
   const { includeCarverConfig = true, includeGitIgnore = true, fileCount = 5 } = options;
 
   const fsStructure = {

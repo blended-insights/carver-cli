@@ -8,7 +8,7 @@ import { createMockProject } from '../../mocks/fs';
 
 describe('Project Lifecycle E2E', () => {
   const tmpDir = path.join(__dirname, '../../fixtures/e2e-project');
-  let watchProcess;
+  let watchProcess: ReturnType<typeof spawn> | undefined;
 
   beforeAll(async () => {
     // Create fresh test directory
@@ -96,7 +96,7 @@ describe('Project Lifecycle E2E', () => {
 
     // Collect output for verification
     let watchOutput = '';
-    watchProcess.stdout.on('data', (data) => {
+    watchProcess.stdout?.on('data', (data) => {
       watchOutput += data.toString();
     });
 
