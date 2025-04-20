@@ -9,7 +9,7 @@ import { createMockProject } from '../mocks/fs';
 
 describe('File Watcher Resource Usage', () => {
   const tmpDir = path.join(__dirname, '../fixtures/perf-project');
-  let watchProcess: any;
+  let watchProcess: ReturnType<typeof spawn> | undefined;
 
   beforeEach(async () => {
     if (fs.existsSync(tmpDir)) {
@@ -102,7 +102,7 @@ describe('File Watcher Resource Usage', () => {
 
     // Collect output for verification
     let watchOutput = '';
-    watchProcess.stdout.on('data', (data: Buffer) => {
+    watchProcess.stdout?.on('data', (data: Buffer) => {
       watchOutput += data.toString();
     });
 
