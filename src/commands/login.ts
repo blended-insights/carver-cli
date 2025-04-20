@@ -15,10 +15,6 @@ interface PromptApiKeyResponse {
   apiKey: string;
 }
 
-interface PromptPkeyPathResponse {
-  pkeyPath: string;
-}
-
 interface PromptKeyIdResponse {
   keyId: string;
 }
@@ -39,7 +35,6 @@ export function createLoginCommand(program: Command): void {
     .command('login')
     .description('Log in to Carver API')
     .option('--api-key <key>', 'Use API key for authentication')
-    .option('--pkey <path>', 'Use private key file for authentication')
     .option('--key-id <id>', 'Key ID for private key authentication')
     .action(async (options) => {
       try {
@@ -52,10 +47,6 @@ export function createLoginCommand(program: Command): void {
           // Authenticate with provided API key
           logger.info('Authenticating with API key...');
           success = await authService.authenticateWithApiKey(options.apiKey);
-        } else if (options.pkey && options.keyId) {
-          // Authenticate with private key
-          logger.info('Authenticating with private key...');
-          success = await authService.authenticateWithPKey(options.pkey, options.keyId);
         } else {
           // Interactive authentication
           logger.info('Please authenticate with Carver');
@@ -65,7 +56,7 @@ export function createLoginCommand(program: Command): void {
             type: 'select',
             name: 'method',
             message: 'Choose authentication method:',
-            choices: ['API Key', 'Private Key (PKEY)'],
+            choices: ['API Key'],
           });
 
           if (method === 'API Key') {
@@ -77,32 +68,6 @@ export function createLoginCommand(program: Command): void {
             });
 
             success = await authService.authenticateWithApiKey(apiKey);
-          } else {
-            // Get private key information
-            const { pkeyPath } = await prompt<PromptPkeyPathResponse>({
-              type: 'input',
-              name: 'pkeyPath',
-              message: 'Enter path to your private key file:',
-              initial: path.join(
-                process.env.HOME || process.env.USERPROFILE || '',
-                '.ssh',
-                'id_rsa',
-              ),
-            });
-
-            const { keyId } = await prompt<PromptKeyIdResponse>({
-              type: 'input',
-              name: 'keyId',
-              message: 'Enter your key ID:',
-            });
-
-            // Check if file exists
-            if (!fs.existsSync(pkeyPath)) {
-              logger.error(`Private key file not found: ${pkeyPath}`);
-              process.exit(1);
-            }
-
-            success = await authService.authenticateWithPKey(pkeyPath, keyId);
           }
         }
 

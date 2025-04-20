@@ -97,30 +97,6 @@ export class AuthService {
   }
 
   /**
-   * Authenticate with PKEY
-   * @param pkeyPath Path to private key file
-   * @param keyId Key identifier
-   * @returns Authentication result
-   */
-  async authenticateWithPKey(pkeyPath: string, keyId: string): Promise<boolean> {
-    try {
-      // Implementation for PKEY-based authentication
-      // This would involve:
-      // 1. Reading the private key file
-      // 2. Creating a signed request
-      // 3. Exchanging the signature for tokens
-
-      // For now, as a placeholder:
-      logger.error('PKEY authentication not yet implemented');
-      return false;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('PKEY authentication failed:', errorMessage);
-      return false;
-    }
-  }
-
-  /**
    * Get the current access token, refreshing if necessary
    * @returns Valid access token
    */

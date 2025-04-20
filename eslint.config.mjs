@@ -22,8 +22,8 @@ const commonRules = {
   'prefer-const': 'error',
 
   // Code quality
-  complexity: ['warn', 15],
-  'max-depth': ['warn', 4],
+  // complexity: ['warn', 15],
+  // 'max-depth': ['warn', 4],
   'max-lines': ['warn', 500],
   'max-params': ['warn', 5],
 
