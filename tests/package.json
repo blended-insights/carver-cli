@@ -1,0 +1,5 @@
+{
+  "name": "carver-cli-tests",
+  "private": true,
+  "type": "module"
+}

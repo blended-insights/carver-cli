@@ -1,6 +1,6 @@
-import * as fs from 'fs';
-import * as path from 'path';
-import { exec } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import { exec } from '../../utils/exec';
 import { promisify } from 'util';
 
 const execAsync = promisify(exec);
@@ -34,6 +34,7 @@ describe('Init Command Integration', () => {
     // Run the init command
     await execAsync(
       `node ../../bin/carver.js init --key ${testApiKey} --project ${testProjectId} --directory ${TEST_DIR}`,
+      [],
     );
 
     // Verify .carver directory was created

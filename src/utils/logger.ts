@@ -28,6 +28,31 @@ export const logger = winston.createLogger({
 });
 
 /**
+ * Setup log file transport
+ * @param logFile Path to the log file
+ */
+function setupLogFileTransport(logFile: string): void {
+  // Ensure directory exists
+  const logDir = path.dirname(logFile);
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+
+  logger.add(
+    new winston.transports.File({
+      filename: logFile,
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        // winston.format.uncolorize(),
+        winston.format.printf(({ level, message, timestamp }) => {
+          return `${timestamp} ${level}: ${message}`;
+        }),
+      ),
+    }),
+  );
+}
+
+/**
  * Initialize logger with appropriate configuration
  * @param options Logger options
  */
@@ -57,24 +82,7 @@ export function initializeLogger(options?: {
   // Add file transport if specified
   const logFile = options?.logFile || process.env.LOG_FILE;
   if (logFile) {
-    // Ensure directory exists
-    const logDir = path.dirname(logFile);
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-
-    logger.add(
-      new winston.transports.File({
-        filename: logFile,
-        format: winston.format.combine(
-          winston.format.timestamp(),
-          winston.format.uncolorize(),
-          winston.format.printf(({ level, message, timestamp }) => {
-            return `${timestamp} ${level}: ${message}`;
-          }),
-        ),
-      }),
-    );
+    setupLogFileTransport(logFile);
   }
 
   logger.debug('Logger initialized');

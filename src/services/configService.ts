@@ -1,14 +1,86 @@
-import * as fs from 'fs';
+import * as fs from 'fs-extra';
 import * as path from 'path';
+import * as os from 'os';
 import { logger } from '../utils/logger';
 
 export class ConfigService {
-  private projectRoot: string;
   private configPath: string;
+  private config: Record<string, any> | null = null;
 
-  constructor(projectRoot: string) {
-    this.projectRoot = projectRoot;
+  constructor(projectRoot: string = os.homedir()) {
     this.configPath = path.join(projectRoot, '.carver', 'config.json');
+  }
+
+  /**
+   * Load configuration from file
+   * Creates default config if not exists
+   */
+  async load(): Promise<void> {
+    try {
+      if (fs.existsSync(this.configPath)) {
+        // Load existing configuration
+        this.config = await fs.readJSON(this.configPath);
+        logger.debug('Configuration loaded from', this.configPath);
+      } else {
+        // Create default configuration
+        this.config = {
+          apiUrl: 'https://api.carver.dev',
+        };
+
+        await fs.ensureDir(path.dirname(this.configPath));
+        await fs.writeJSON(this.configPath, this.config, { spaces: 2 });
+        logger.debug('Default configuration created at', this.configPath);
+      }
+    } catch (error) {
+      logger.error('Failed to load configuration:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get configuration value by key
+   * @param key Configuration key
+   * @returns Configuration value or undefined if not found
+   */
+  get(key: string): any {
+    if (!this.config) {
+      logger.warn('Attempted to get config value before loading');
+      return undefined;
+    }
+    return this.config[key];
+  }
+
+  /**
+   * Set configuration value
+   * @param key Configuration key
+   * @param value Configuration value
+   */
+  async set(key: string, value: any): Promise<void> {
+    if (!this.config) {
+      throw new Error('Config not loaded');
+    }
+
+    this.config[key] = value;
+    await this.save();
+    logger.debug(`Configuration updated: ${key}=${value}`);
+  }
+
+  /**
+   * Save configuration to file
+   */
+  async save(): Promise<void> {
+    if (!this.config) {
+      throw new Error('Config not loaded');
+    }
+
+    try {
+      await fs.ensureDir(path.dirname(this.configPath));
+      await fs.writeJSON(this.configPath, this.config, { spaces: 2 });
+      logger.debug('Configuration saved to', this.configPath);
+    } catch (error) {
+      logger.error('Failed to save configuration:', error);
+      throw error;
+    }
   }
 
   /**
@@ -52,6 +124,18 @@ export class ConfigService {
   }
 
   /**
+   * Get the configuration file path
+   * @param customDir Optional custom directory
+   * @returns Path to configuration file
+   */
+  getConfigPath(customDir?: string): string {
+    if (customDir) {
+      return path.join(customDir, '.carver', 'config.json');
+    }
+    return this.configPath;
+  }
+
+  /**
    * Check if project is initialized
    * @returns True if project is initialized
    */
@@ -60,18 +144,20 @@ export class ConfigService {
   }
 
   /**
-   * Update project configuration
-   * @param config New configuration values
-   * @returns Updated configuration
+   * Update multiple configuration values at once
+   * @param updateValues Object with new configuration values
    */
-  updateConfig(config: any): any {
-    const currentConfig = this.getConfig() || {};
-    const updatedConfig = {
-      ...currentConfig,
-      ...config,
+  async updateConfig(updateValues: Record<string, any>): Promise<Record<string, any>> {
+    if (!this.config) {
+      await this.load();
+    }
+
+    this.config = {
+      ...this.config,
+      ...updateValues,
     };
 
-    this.saveConfig(updatedConfig);
-    return updatedConfig;
+    await this.save();
+    return this.config || {};
   }
 }
